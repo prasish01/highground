@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Node
+node_modules/
+web/dist/
+
+# Secrets and local config
+.env
+.env.*
+!.env.example
+.claude/settings.local.json
+
+# OS / editors
+.DS_Store
+.idea/
+.vscode/

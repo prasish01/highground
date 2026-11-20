@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SAMPLE replay warning in CAP 1.2 format. It is NOT a real MetService warning.
+  Before the demo, replace this file with a real saved CAP file from
+  https://alerts.metservice.com/cap/rss (keep the source and issue date in docs/data-sources.md).
+  The app shifts onset/expiry so the warning always starts a few hours from "now".
+-->
+<alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
+  <identifier>sample-replay-0001</identifier>
+  <sender>sample@highground.invalid</sender>
+  <sent>2026-02-12T06:00:00+13:00</sent>
+  <status>Exercise</status>
+  <msgType>Alert</msgType>
+  <scope>Public</scope>
+  <info>
+    <category>Met</category>
+    <event>Heavy Rain</event>
+    <urgency>Expected</urgency>
+    <severity>Extreme</severity>
+    <certainty>Likely</certainty>
+    <onset>2026-02-12T18:00:00+13:00</onset>
+    <expires>2026-02-13T12:00:00+13:00</expires>
+    <headline>SAMPLE: Red Heavy Rain Warning for Hawke's Bay</headline>
+    <description>SAMPLE TEXT. Expect 200 to 300 mm of rain. Rivers and streams could rise rapidly.</description>
+    <instruction>SAMPLE TEXT. Act now. Follow the advice of Civil Defence and emergency services.</instruction>
+    <parameter>
+      <valueName>ColourCode</valueName>
+      <value>Red</value>
+    </parameter>
+    <area>
+      <areaDesc>Hawke's Bay (sample area)</areaDesc>
+      <polygon>-39.50,176.55 -39.50,176.95 -39.75,176.95 -39.75,176.55 -39.50,176.55</polygon>
+    </area>
+  </info>
+</alert>

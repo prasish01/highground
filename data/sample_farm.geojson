@@ -1,0 +1,387 @@
+{
+  "type": "FeatureCollection",
+  "properties": {
+    "name": "Demo Farm (fictional), Hawke's Bay",
+    "herd_size": 300,
+    "ha_per_cow": 0.02,
+    "river_elevation_m": 20,
+    "note": "FICTIONAL demo farm. Elevations are placeholder values; replace with live Open Topo Data (nzdem8m) lookups via highground.elevation."
+  },
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "paddock",
+        "id": "p1",
+        "name": "Paddock 1",
+        "elevation_m": 21,
+        "has_water": true
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              176.72,
+              -39.63
+            ],
+            [
+              176.7235,
+              -39.63
+            ],
+            [
+              176.7235,
+              -39.6273
+            ],
+            [
+              176.72,
+              -39.6273
+            ],
+            [
+              176.72,
+              -39.63
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "paddock",
+        "id": "p2",
+        "name": "Paddock 2",
+        "elevation_m": 22,
+        "has_water": true
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              176.7235,
+              -39.63
+            ],
+            [
+              176.727,
+              -39.63
+            ],
+            [
+              176.727,
+              -39.6273
+            ],
+            [
+              176.7235,
+              -39.6273
+            ],
+            [
+              176.7235,
+              -39.63
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "paddock",
+        "id": "p3",
+        "name": "Paddock 3",
+        "elevation_m": 21,
+        "has_water": true
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              176.727,
+              -39.63
+            ],
+            [
+              176.7305,
+              -39.63
+            ],
+            [
+              176.7305,
+              -39.6273
+            ],
+            [
+              176.727,
+              -39.6273
+            ],
+            [
+              176.727,
+              -39.63
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "paddock",
+        "id": "p4",
+        "name": "Paddock 4",
+        "elevation_m": 26,
+        "has_water": true
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              176.72,
+              -39.6273
+            ],
+            [
+              176.7235,
+              -39.6273
+            ],
+            [
+              176.7235,
+              -39.6246
+            ],
+            [
+              176.72,
+              -39.6246
+            ],
+            [
+              176.72,
+              -39.6273
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "paddock",
+        "id": "p5",
+        "name": "Paddock 5",
+        "elevation_m": 27,
+        "has_water": true
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              176.7235,
+              -39.6273
+            ],
+            [
+              176.727,
+              -39.6273
+            ],
+            [
+              176.727,
+              -39.6246
+            ],
+            [
+              176.7235,
+              -39.6246
+            ],
+            [
+              176.7235,
+              -39.6273
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "paddock",
+        "id": "p6",
+        "name": "Paddock 6",
+        "elevation_m": 25,
+        "has_water": true
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              176.727,
+              -39.6273
+            ],
+            [
+              176.7305,
+              -39.6273
+            ],
+            [
+              176.7305,
+              -39.6246
+            ],
+            [
+              176.727,
+              -39.6246
+            ],
+            [
+              176.727,
+              -39.6273
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "paddock",
+        "id": "p7",
+        "name": "Paddock 7",
+        "elevation_m": 36,
+        "has_water": true
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              176.72,
+              -39.6246
+            ],
+            [
+              176.7235,
+              -39.6246
+            ],
+            [
+              176.7235,
+              -39.6219
+            ],
+            [
+              176.72,
+              -39.6219
+            ],
+            [
+              176.72,
+              -39.6246
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "paddock",
+        "id": "p8",
+        "name": "Paddock 8",
+        "elevation_m": 34,
+        "has_water": false
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              176.7235,
+              -39.6246
+            ],
+            [
+              176.727,
+              -39.6246
+            ],
+            [
+              176.727,
+              -39.6219
+            ],
+            [
+              176.7235,
+              -39.6219
+            ],
+            [
+              176.7235,
+              -39.6246
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "paddock",
+        "id": "p9",
+        "name": "Paddock 9",
+        "elevation_m": 31,
+        "has_water": true
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              176.727,
+              -39.6246
+            ],
+            [
+              176.7305,
+              -39.6246
+            ],
+            [
+              176.7305,
+              -39.6219
+            ],
+            [
+              176.727,
+              -39.6219
+            ],
+            [
+              176.727,
+              -39.6246
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "river",
+        "name": "Demo River"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [
+            176.715,
+            -39.6318
+          ],
+          [
+            176.724,
+            -39.6312
+          ],
+          [
+            176.731,
+            -39.632
+          ],
+          [
+            176.738,
+            -39.6309
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "kind": "shed",
+        "name": "Milking shed"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          176.7253,
+          -39.6248
+        ]
+      }
+    }
+  ]
+}
