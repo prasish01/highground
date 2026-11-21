@@ -147,6 +147,7 @@ def test_river_status_is_reported_and_used_in_live_mode(client, monkeypatch):
         "site": "Ngaruroro River at Fernhill",
         "level_m": 2.4,
         "observed_at": "2026-11-21T09:00:00+13:00",
+        "observed_label": "9am",
         "rising": True,
     }
     assert body["river_rising"] is True
@@ -196,6 +197,16 @@ def test_explicit_river_rising_param_overrides_the_gauge(client, monkeypatch):
     body = client.get("/api/assess", params={"mode": "replay", "river_rising": "false"}).json()
     assert body["river_rising"] is False
     assert body["river"]["rising"] is True  # still shown, just not used for scoring
+
+
+def test_river_observed_label_is_nz_time_even_if_gauge_reports_utc(client, monkeypatch):
+    class UtcRiver(FakeRiver):
+        observed_at = datetime(2026, 11, 21, 1, 15, tzinfo=UTC)  # 2:15pm NZDT
+
+    monkeypatch.setattr(main, "get_river_status", lambda timeout_s=5.0: UtcRiver())
+    river = client.get("/api/assess", params={"mode": "replay"}).json()["river"]
+    assert river["observed_label"] == "2:15pm"
+    assert river["observed_at"] == "2026-11-21T14:15:00+13:00"
 
 
 def test_river_gauge_failure_gives_null_river(client, monkeypatch):

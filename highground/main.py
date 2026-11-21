@@ -165,7 +165,7 @@ _river_cache: dict[str, Any] = {"at": None, "status": None}
 
 
 def current_river() -> dict[str, Any] | None:
-    """Latest river reading as {site, level_m, observed_at, rising}, or None."""
+    """Latest river reading as {site, level_m, observed_at, observed_label, rising}, or None."""
     if get_river_status is None:
         return None
     at = _river_cache["at"]
@@ -179,7 +179,8 @@ def current_river() -> dict[str, Any] | None:
             else {
                 "site": status.site,
                 "level_m": status.level_m,
-                "observed_at": status.observed_at.isoformat(),
+                "observed_at": to_nz(status.observed_at).isoformat(),
+                "observed_label": format_time(status.observed_at),  # e.g. "2:15pm", NZ time
                 "rising": bool(status.rising),
             }
         )
