@@ -56,7 +56,7 @@ npm run dev                                           # http://localhost:5173
 ```
 highground/      Python package: geo, CAP parsing, risk scoring, plan, FastAPI app
 data/            sample_farm.geojson (fictional farm), replay_warning.xml (SAMPLE, replace before demo)
-web/             React + TypeScript + Vite + Leaflet frontend
+web/             React + TypeScript + Vite frontend (map drawn in SVG)
 tests/           pytest suite for the core logic
 docs/            hackathon plan, data sources, decisions, pitch
 ```
