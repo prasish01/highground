@@ -26,7 +26,7 @@ Before starting: app open on the sample farm in **calm** mode (all paddocks gree
 | Time | Click | Say |
 |---|---|---|
 | 0:40 | *(nothing — point at the map)* | "This is a sample farm on the Hawke's Bay plains. It's fictional, but the river and the data sources are real." |
-| 0:50 | *Click **Replay warning*** | "This is a saved MetService heavy-rain warning, replayed with its times shifted to now. You can see it's labelled REPLAY." |
+| 0:50 | *Click **Replay warning*** | "This is a replay of a sample warning in the official MetService alert format. Live mode checks the real MetService feed. Its times are shifted to now, and you can see it's labelled REPLAY." |
 | 1:00 | *(point at the red paddocks)* | "The paddocks low and close to the river turn red. Higher ground stays green." |
 | 1:10 | *(point at the banner)* | "And the banner gives one clear instruction: move the herd to [paddock shown], by [time shown]." |
 | 1:20 | *Hover or click a red paddock by the river* | "Every colour has a reason: [read the reason shown, e.g. height above river and distance]. It's simple rules you can check, not a black box." |
@@ -71,7 +71,7 @@ It rewrites facts our code has already worked out (paddock names, colours, the r
 MetService CAP warnings; Toitū Te Whenua LINZ elevation via Open Topo Data (CC BY 4.0); Hawke's Bay Regional Council river levels (CC BY 4.0); OpenStreetMap map data. The demo farm is fictional and the replayed warning is labelled. Full list: `docs/data-sources.md`.
 
 **Is the warning in the demo real?**
-"This is a replay of a sample warning in the official MetService format; live mode checks the real MetService feed."
+"This is a replay of a sample warning in the official MetService alert format. Live mode checks the real MetService feed."
 
 > If Teammate 2 saves a real past MetService warning into `data/replay_warning.xml`, update this answer with its source and issue date from `docs/data-sources.md`: [TBD].
 

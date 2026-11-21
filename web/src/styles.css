@@ -31,6 +31,7 @@ body { margin: 0; background: #eef0ec; }
 }
 .tag-replay.small { font-size: 0.7rem; padding: 1px 6px; vertical-align: middle; }
 .move { font-size: clamp(1.8rem, 4.5vw, 3.4rem); font-weight: 900; line-height: 1.1; margin-top: 8px; }
+.window { font-size: clamp(1.1rem, 2vw, 1.5rem); margin-top: 6px; font-weight: 600; }
 .move-calm { font-size: clamp(1.1rem, 2.2vw, 1.5rem); font-weight: 600; }
 
 /* ---------- Controls ---------- */
@@ -82,6 +83,7 @@ button.primary:hover { background: #8f1016; }
 .river-level { font-size: 1.6rem; font-weight: 800; }
 .trend { font-size: 1rem; padding: 2px 8px; border-radius: 4px; vertical-align: middle; }
 .trend-rising { background: var(--red); color: #fff; }
+.river-note { margin-top: 6px; font-weight: 700; font-size: 0.95rem; }
 .trend-steady { background: #dfe7e2; color: var(--calm); }
 
 /* ---------- Paddock popup ---------- */

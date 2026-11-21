@@ -165,7 +165,7 @@ _river_cache: dict[str, Any] = {"at": None, "status": None}
 
 
 def current_river() -> dict[str, Any] | None:
-    """Latest river reading as {site, level_m, observed_at, rising}, or None."""
+    """Latest river reading as {site, level_m, observed_at, observed_label, rising}, or None."""
     if get_river_status is None:
         return None
     at = _river_cache["at"]
@@ -179,7 +179,8 @@ def current_river() -> dict[str, Any] | None:
             else {
                 "site": status.site,
                 "level_m": status.level_m,
-                "observed_at": status.observed_at.isoformat(),
+                "observed_at": to_nz(status.observed_at).isoformat(),
+                "observed_label": format_time(status.observed_at),  # e.g. "2:15pm", NZ time
                 "rising": bool(status.rising),
             }
         )
@@ -204,9 +205,11 @@ def assess(
     river_rising: bool | None = None,
 ) -> dict:
     warning, live_status = active_warning(mode)
-    river = current_river()
-    if river_rising is None:  # not set by the caller: use the real gauge if we have one
-        river_rising = bool(river and river["rising"])
+    river = current_river()  # shown for display in every mode
+    if river_rising is None:
+        # Only live mode lets the real gauge change scores. Calm and replay are rehearsed
+        # demo states, so they assume a steady river unless the caller says otherwise.
+        river_rising = mode == "live" and bool(river and river["rising"])
     risks = [
         score_paddock(p, FARM.river, FARM.river_elevation_m, warning, river_rising)
         for p in FARM.paddocks

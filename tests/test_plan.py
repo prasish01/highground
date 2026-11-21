@@ -1,6 +1,7 @@
 """Gemini plan: validation, retry and fallback. The Gemini call is always mocked."""
 
 import json
+import time
 
 import pytest
 
@@ -32,13 +33,19 @@ GOOD = {
 }
 
 
+@pytest.fixture(autouse=True)
+def empty_plan_cache(monkeypatch):
+    monkeypatch.setattr(plan, "_plan_cache", {})
+
+
 @pytest.fixture
 def calls(monkeypatch):
     """Replace the Gemini call with a queue of canned replies; record each call."""
     made: list[str] = []
     replies: list = []
 
-    def fake_generate(api_key, prompt):
+    def fake_generate(api_key, prompt, timeout_s):
+        assert 0 < timeout_s <= plan.GEMINI_BUDGET_S
         made.append(prompt)
         reply = replies.pop(0)
         if isinstance(reply, Exception):
@@ -133,3 +140,86 @@ def test_prompt_contains_the_facts_and_the_no_new_facts_rule(calls):
 def test_template_has_no_warning_summary_when_calm():
     f = facts("Demo Farm", 300, None, [], None)
     assert template_plan(f)["summary"] == "No active warning for this farm."
+
+
+# --- issue #10: never stall the demo -----------------------------------------
+
+
+def test_slow_gemini_times_out_to_the_template(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    monkeypatch.setattr(plan, "GEMINI_BUDGET_S", 0.3)
+    made = []
+
+    def hangs(api_key, prompt, timeout_s):
+        made.append(timeout_s)
+        time.sleep(2)  # far longer than the budget
+        return json.dumps(GOOD)
+
+    monkeypatch.setattr(plan, "_generate", hangs)
+    started = time.monotonic()
+    result = make_plan(FACTS)
+    assert time.monotonic() - started < 1.0
+    assert result["source"] == "template"
+    assert "timed out" in result["error"]
+    assert len(made) == 1  # no retry once the time budget is used up
+
+
+def test_retry_only_gets_the_time_that_is_left(monkeypatch):
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key")
+    monkeypatch.setattr(plan, "GEMINI_BUDGET_S", 1.0)
+    timeouts = []
+
+    def slow_junk(api_key, prompt, timeout_s):
+        timeouts.append(timeout_s)
+        time.sleep(0.3)
+        return "junk"
+
+    monkeypatch.setattr(plan, "_generate", slow_junk)
+    assert make_plan(FACTS)["source"] == "template"
+    assert len(timeouts) == 2
+    assert timeouts[1] < timeouts[0] <= 1.0
+
+
+def test_same_facts_reuse_the_cached_gemini_plan(calls):
+    made, replies = calls
+    replies.append(json.dumps(GOOD))
+    first = make_plan(FACTS)
+    second = make_plan(dict(reversed(FACTS.items())))  # same facts, different key order
+    assert first == second
+    assert second["source"] == "gemini"
+    assert len(made) == 1
+
+
+def test_cached_plan_is_a_copy(calls):
+    _, replies = calls
+    replies.append(json.dumps(GOOD))
+    make_plan(FACTS)["moves"].clear()
+    assert make_plan(FACTS)["moves"] == GOOD["moves"]
+
+
+def test_different_facts_call_gemini_again(calls):
+    made, replies = calls
+    replies.extend([json.dumps(GOOD), json.dumps(GOOD)])
+    make_plan(FACTS)
+    make_plan({**FACTS, "herd_size": 301})
+    assert len(made) == 2
+
+
+def test_failed_plan_is_cached_briefly_then_retried(calls, monkeypatch):
+    made, replies = calls
+    replies.extend(["junk", "junk"])
+    assert make_plan(FACTS)["source"] == "template"
+    assert make_plan(FACTS)["source"] == "template"
+    assert len(made) == 2  # second press did not wait on Gemini again
+
+    monkeypatch.setattr(plan, "FAILED_PLAN_TTL_S", -1)  # pretend the 2 minutes have passed
+    replies.append(json.dumps(GOOD))
+    assert make_plan(FACTS)["source"] == "gemini"
+    assert len(made) == 3
+
+
+def test_no_warning_uses_template_without_calling_gemini(calls):
+    made, _ = calls
+    result = make_plan({**FACTS, "warning": None, "recommendation": None})
+    assert result["source"] == "template"
+    assert made == []

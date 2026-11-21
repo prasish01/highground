@@ -53,7 +53,7 @@ Close everything else. Turn off notifications (Do Not Disturb). Set browser zoom
 
 Replay mode and the template plan work without internet:
 
-- Replay uses the saved warning in `data/replay_warning.xml`.
+- Replay uses the sample warning saved in `data/replay_warning.xml` (official MetService alert format, not a real event).
 - With no Gemini access, the plan falls back to the built-in template (the plan screen shows "Written by: template").
 - Map tiles from OpenStreetMap need internet. Without it the paddocks still draw and colour, on a blank background.
 

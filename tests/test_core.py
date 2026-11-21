@@ -6,7 +6,16 @@ from highground.cap import as_replay, parse_cap
 from highground.farm import DATA_DIR, load_farm
 from highground.geo import area_ha, distance_to_line_m, haversine_m, point_in_polygon
 from highground.plan import facts, template_plan
-from highground.risk import NZ_TZ, band, format_time, recommend, score_paddock, to_nz
+from highground.risk import (
+    NZ_TZ,
+    Paddock,
+    band,
+    describe_height,
+    format_time,
+    recommend,
+    score_paddock,
+    to_nz,
+)
 
 NZDT = timezone(timedelta(hours=13))
 
@@ -68,14 +77,44 @@ def test_warning_covers_the_sample_farm(farm, warning):
 # --- risk scoring -----------------------------------------------------------
 
 
+@pytest.mark.parametrize(
+    ("height", "words"),
+    [
+        (12.4, "12 m above river"),
+        (1.6, "2 m above river"),
+        (1.0, "at river level"),
+        (0.3, "at river level"),
+        (0.0, "at river level"),
+        (-0.6, "at river level"),
+        (-1.0, "at river level"),
+        (-1.4, "1 m below river level"),
+        (-3.2, "3 m below river level"),
+    ],
+)
+def test_describe_height(height, words):
+    assert describe_height(height) == words
+
+
+def test_reason_never_says_negative_metres_above_river(farm):
+    # BUG-008: a paddock slightly below the river median read "-1 m above river".
+    low = Paddock("low", "Low paddock", farm.paddocks[0].ring, farm.river_elevation_m - 0.8)
+    under = Paddock("under", "Under paddock", farm.paddocks[0].ring, farm.river_elevation_m - 2.6)
+    low_reason = score_paddock(low, farm.river, farm.river_elevation_m, None).reason
+    under_reason = score_paddock(under, farm.river, farm.river_elevation_m, None).reason
+    assert low_reason.startswith("at river level, ")
+    assert under_reason.startswith("3 m below river level, ")
+    assert "-" not in low_reason + under_reason
+
+
 def test_band_thresholds():
     assert (band(0.1), band(0.5), band(0.9)) == ("green", "amber", "red")
 
 
 def test_low_paddock_by_river_scores_higher_than_high_paddock(farm, warning):
-    by_name = {p.name: p for p in farm.paddocks}
-    low = score_paddock(by_name["Paddock 1"], farm.river, farm.river_elevation_m, warning)
-    high = score_paddock(by_name["Paddock 7"], farm.river, farm.river_elevation_m, warning)
+    # Not tied to paddock numbers: the lowest and highest paddocks on whatever farm we load.
+    by_height = sorted(farm.paddocks, key=lambda p: p.elevation_m)
+    low = score_paddock(by_height[0], farm.river, farm.river_elevation_m, warning)
+    high = score_paddock(by_height[-1], farm.river, farm.river_elevation_m, warning)
     assert low.score > high.score
     assert low.band == "red"
     assert high.band == "green"
@@ -96,21 +135,45 @@ def test_rising_river_never_lowers_a_score(farm, warning):
 # --- recommendation ---------------------------------------------------------
 
 
-def test_recommends_paddock_7_with_a_deadline_three_hours_before_onset(farm, warning):
+def test_recommends_safest_watered_paddock_three_hours_before_onset(farm, warning):
+    # Not tied to a paddock number, so it survives the farm being redrawn on real terrain.
     now = datetime(2026, 11, 21, 12, 0, tzinfo=NZDT)
     replay = as_replay(warning, now)  # onset 7pm
     risks = [score_paddock(p, farm.river, farm.river_elevation_m, replay) for p in farm.paddocks]
     rec = recommend(farm.paddocks, risks, farm.herd_size, farm.ha_per_cow, replay)
     assert rec is not None
-    assert rec.name == "Paddock 7"
+    by_id = {p.id: p for p in farm.paddocks}
+    chosen = by_id[rec.paddock_id]
+    assert chosen.has_water
+    assert chosen.area_ha >= farm.herd_size * farm.ha_per_cow
+    fits = [r for r in risks if by_id[r.paddock_id].has_water]
+    assert rec_risk(risks, rec).score == min(r.score for r in fits)
+    assert rec_risk(risks, rec).band != "red"
     assert rec.deadline == datetime(2026, 11, 21, 16, 0, tzinfo=NZDT)
-    assert rec.message == "Move the herd to Paddock 7 by 4pm"
+    assert rec.message == f"Move the herd to {chosen.name} by 4pm"
+    assert rec.message.startswith("Move the herd to Paddock ")
+
+
+def rec_risk(risks, rec):
+    return next(r for r in risks if r.paddock_id == rec.paddock_id)
 
 
 def test_paddock_without_water_is_never_recommended(farm, warning):
     risks = [score_paddock(p, farm.river, farm.river_elevation_m, warning) for p in farm.paddocks]
     rec = recommend(farm.paddocks, risks, farm.herd_size, farm.ha_per_cow, warning)
-    assert rec.name != "Paddock 8"
+    dry = [p.id for p in farm.paddocks if not p.has_water]
+    assert dry, "sample farm should have a paddock without water to test this"
+    assert rec.paddock_id not in dry
+
+
+def test_dry_paddock_is_skipped_even_when_it_is_the_safest(farm, warning):
+    # Make every paddock dry except the riskiest one: that one must still be chosen.
+    risks = [score_paddock(p, farm.river, farm.river_elevation_m, warning) for p in farm.paddocks]
+    riskiest = max(risks, key=lambda r: r.score).paddock_id
+    for p in farm.paddocks:
+        p.has_water = p.id == riskiest
+    rec = recommend(farm.paddocks, risks, farm.herd_size, farm.ha_per_cow, warning)
+    assert rec.paddock_id == riskiest
 
 
 def test_no_recommendation_when_herd_does_not_fit(farm, warning):
