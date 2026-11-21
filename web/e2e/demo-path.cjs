@@ -23,9 +23,8 @@ const BASE_URL = process.env.BASE_URL || "http://localhost:5173";
 const SHOTS = process.env.SHOTS || ""; // folder for screenshots; empty = none
 const SAFETY =
   "Official MetService warnings and Civil Defence advice always come first. This is guidance, not a guarantee.";
-// Must match BAND_COLOUR in web/src/App.tsx.
-const RED = "#d9363e";
-const GREEN = "#1f8a5b";
+// The drawn map (web/src/components/FarmMap.tsx) marks each paddock with data-band="red|amber|green".
+const PADDOCK = ".farm-map .paddock";
 const CREDITS = [/MetService/, /LINZ/, /Open Topo Data/, /Hawke.s Bay Regional Council|HBRC/, /OpenStreetMap/];
 
 const VIEWPORTS = [
@@ -61,9 +60,9 @@ async function run(browser, vp) {
 
   // 1. Load the sample farm
   await page.goto(BASE_URL, { waitUntil: "domcontentloaded" });
-  await page.waitForSelector("path.leaflet-interactive", { state: "attached", timeout: 15000 }).catch(() => {});
-  const paths = await page.locator("path.leaflet-interactive").count();
-  check(v, "farm loads on the map", paths >= 9, `${paths} shapes drawn`);
+  await page.waitForSelector(PADDOCK, { state: "attached", timeout: 15000 }).catch(() => {});
+  const paths = await page.locator(PADDOCK).count();
+  check(v, "farm loads on the map", paths >= 9, `${paths} paddocks drawn`);
   check(v, "safety line visible (calm)", await safetyVisible(page));
   await shot(page, v, "1-calm");
 
@@ -82,25 +81,18 @@ async function run(browser, vp) {
   check(v, "REPLAY label shown", await page.getByText(/^REPLAY$/).first().isVisible().catch(() => false));
   check(v, "safety line visible (replay)", await safetyVisible(page));
 
-  // Colours come from the SVG fill of each paddock shape.
-  await page.waitForTimeout(300); // GeoJSON layer re-mounts with new colours
-  // Paddocks are polygons; skip the river (no fill) and the shed (a circle: its path uses arcs).
-  const fills = await page.$$eval("path.leaflet-interactive", (els) =>
-    els
-      .filter((e) => !/a/i.test(e.getAttribute("d") || ""))
-      .map((e) => (e.getAttribute("fill") || "").toLowerCase()),
-  );
-  const reds = fills.filter((f) => f === RED).length;
-  const greens = fills.filter((f) => f === GREEN).length;
+  // Bands come from each paddock's data-band attribute (the colour is drawn from it).
+  await page.waitForTimeout(300);
+  const bands = await page.$$eval(PADDOCK, (els) => els.map((e) => e.getAttribute("data-band")));
+  const reds = bands.filter((b) => b === "red").length;
+  const greens = bands.filter((b) => b === "green").length;
   check(v, ">= 2 red paddocks", reds >= 2, `${reds} red`);
   check(v, ">= 1 green paddock", greens >= 1, `${greens} green`);
 
   // Every paddock shape must be at least partly inside the visible map.
-  const mapBox = await page.locator(".leaflet-container").boundingBox();
-  const boxes = await page.$$eval("path.leaflet-interactive", (els) =>
+  const mapBox = await page.locator(".farm-map").boundingBox();
+  const boxes = await page.$$eval(".farm-map .paddock-line", (els) =>
     els
-      .filter((e) => e.getAttribute("fill") && e.getAttribute("fill") !== "none")
-      .filter((e) => !/a/i.test(e.getAttribute("d") || ""))
       .map((e) => {
         const r = e.getBoundingClientRect();
         return { x: r.x, y: r.y, w: r.width, h: r.height };
@@ -118,11 +110,11 @@ async function run(browser, vp) {
   await shot(page, v, "2-replay");
 
   // 3. Tap a red paddock: popup shows its reason
-  const redPath = page.locator(`path.leaflet-interactive[fill="${RED}"]`).first();
+  const redPath = page.locator(`${PADDOCK}[data-band="red"]`).first();
   let popupText = "";
   if ((await redPath.count()) > 0) {
     await redPath.click({ force: true }).catch(() => {});
-    popupText = (await page.locator(".leaflet-popup-content").first().textContent({ timeout: 3000 }).catch(() => "")) || "";
+    popupText = (await page.locator(".paddock-card").first().textContent({ timeout: 3000 }).catch(() => "")) || "";
   }
   check(v, "paddock popup shows reason", /m (above|below|from) river/.test(popupText), JSON.stringify(popupText.slice(0, 120)));
   await shot(page, v, "3-popup");
