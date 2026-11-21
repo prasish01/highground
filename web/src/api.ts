@@ -39,6 +39,10 @@ export interface Assessment {
   disclaimer: string;
   /** Optional: river gauge reading. May be missing or null (e.g. gauge offline). */
   river?: RiverReading | null;
+  /** Live mode only: "ok" if the MetService feed answered, "unavailable" if not; null otherwise. */
+  live_status?: "ok" | "unavailable" | null;
+  /** Whether scoring treated the river as rising (from the gauge, or the query parameter). */
+  river_rising?: boolean;
 }
 
 export async function getFarm(): Promise<GeoJSON.FeatureCollection> {
@@ -47,8 +51,14 @@ export async function getFarm(): Promise<GeoJSON.FeatureCollection> {
   return res.json();
 }
 
-export async function assess(mode: Mode, riverRising = false): Promise<Assessment> {
-  const res = await fetch(`/api/assess?mode=${mode}&river_rising=${riverRising}`);
+/**
+ * riverRising is only sent when given. Leaving it out lets the server use the real river gauge;
+ * sending false would override the gauge.
+ */
+export async function assess(mode: Mode, riverRising?: boolean): Promise<Assessment> {
+  const params = new URLSearchParams({ mode });
+  if (riverRising !== undefined) params.set("river_rising", String(riverRising));
+  const res = await fetch(`/api/assess?${params}`);
   if (!res.ok) throw new Error(`Assessment failed: ${res.status}`);
   return res.json();
 }
