@@ -1,84 +1,87 @@
 # QA status
 
-**2026-11-21 14:00 NZDT** · Teammate 5 (QA + Direction) · overwritten each check-in
+**2026-11-21 16:20 NZDT** · Teammate 5 (QA + Direction) · overwritten each check-in
 
-## Overall: 🟡 Amber
+## Overall: 🟢 Green
 
-- **main is 🟢:** the demo path works (2 red, 6 green, banner, plan), but times are in the server's zone (BUG-002, fixed by PR #2).
-- **The integrated build is 🔴 until BUG-001 is fixed:** with all PRs merged, the map shows no paddocks (it's centred 5 km from the redrawn farm). Everything else passes. With the map centred on the farm, all 38 browser checks pass at 1366px and 375px.
+- **main 🟢 with #19 merged** (hand-drawn map; rollback tag `pre-redesign` exists). 143 tests pass; demo path **42/42** at 1366px and 375px (run twice), including QA's independent checks (bands match the API, washes really red/green).
+- **Fully offline on main:** with the page loaded and Replay pressed, **zero requests leave localhost**. This is the wifi-off rehearsal check, done in the browser.
+- **#20 (Leaflet removed, Presentation mode, BUG-014/017 fixes): ✅ ready.** With #20 + #16 on main: 143 tests, demo path **42/42 ×2** normal and **42/42** in Presentation mode, their `presentation.cjs` 18/18, zero external requests.
+- **#16 (this QA PR):** up to date with main; merges cleanly with #20. **Ready to merge.** #20 and #16 can go in either order.
+- **UI freeze from now:** fixes only. Re-run `node web/e2e/demo-path.cjs` after every merge.
 
-## Demo path, step by step (all open PRs merged: #2, #4, #1, #3, #5)
+## Demo path, step by step (main, with #19)
 
 | Step | Desktop 1366 | Mobile 375 | Notes |
 |---|---|---|---|
-| Sample farm loads | ✅ | ✅ | 9 paddocks, river, shed |
-| Replay warning → REPLAY label | ✅ | ✅ | |
-| ≥ 2 red near river, ≥ 1 green | ✅ data / ❌ **on screen** | ✅ / ❌ | API: 3 red, 5 amber, 1 green. Map: 0/10 shapes in view (BUG-001) |
-| Banner "Move the herd to Paddock N by time" | ✅ | ✅ | "Move the herd to Paddock 7 by 5pm" on a **UTC** container, so NZ time is correct |
-| Paddock popup shows reason | ❌ (off-screen) | ❌ | ✅ once centred: "RED · -1 m above river, 289 m from river, inside red warning" |
-| Show plan: moves + checklist | ✅ | ✅ | 2 moves, 7 items, template |
-| Copy / Print | ✅ | ✅ | Copied text has REPLAY + safety line (but not on the nifty-bohr branch, BUG-003) |
-| About shows credits | ✅ | ✅ | MetService, LINZ, Open Topo Data, HBRC, OSM |
-| Safety line on every screen | ✅ | ✅ | calm, replay, plan, About |
-| Live mode offline | ✅ | ✅ | `live_status: "unavailable"`, amber banner, never "all clear" |
+| Sample farm loads | ✅ | ✅ | Drawn map, 9 paddocks, river, shed, scale bar, north arrow |
+| Replay warning → REPLAY label | ✅ | ✅ | Rubber-stamped REPLAY in the banner |
+| ≥ 2 red near river, ≥ 1 green | ✅ | ✅ | 3 MOVE OUT, 5 WATCH, 1 SAFE. Bands match the API, paddock by paddock; washes really are red and green |
+| Banner "Move the herd to Paddock N by time" | ✅ | ✅ | "Move the herd to Paddock 7 by 7pm", plus a "herd here" cow on Paddock 7 |
+| Paddock card shows reason | ✅ | ✅ | "MOVE OUT · at river level, 289 m from river, inside red warning" |
+| Show plan: moves + checklist | ✅ | ✅ | REPLAY note first |
+| Copy / Print | ✅ | ✅ | Copied text has REPLAY + safety line |
+| About shows credits | ✅ | ✅ | MetService, LINZ, Open Topo Data, HBRC, OSM (river line) |
+| Safety line on every screen | ✅ | ✅ | Pinned at the bottom on desktop; under the banner on phones |
+| Works offline | ✅ | ✅ | No requests leave localhost (fonts self-hosted, no tiles) |
 | No horizontal scroll / no JS errors | ✅ | ✅ | |
 
-How to re-run: start the API and `npm run dev`, then `node web/e2e/demo-path.cjs`.
+On main today (Leaflet map) the same path is 38/38, with tiles needing wifi.
 
 ## Tests
 
-| Where | ruff | pytest | npm build |
-|---|---|---|---|
-| main | ✅ | 16 passed (+ QA: 20 passed, 4 xfail for BUG-002) | ✅ |
-| Integration (all PRs) | ✅ + format ✅ | **120 passed** (96 team + 24 QA), no network | ✅ |
-| Each PR alone + QA tests | ✅ | all pass: #2, #4, #1, #5, nifty-bohr | ✅ |
+| Where | Merge | ruff + format | pytest | Browser |
+|---|---|---|---|---|
+| main before #19 | — | ✅ | 143 passed | 38/38 ×2 (Leaflet) |
+| **main now (with #19)** | — | ✅ | **143 passed** | **42/42 ×2** (drawn; incl. 4 QA independent checks) |
+| main + #16 (this PR) | clean (conflict resolved here) | ✅ | 143 passed | 42/42 (same test) |
+| main + #20 + #16 | clean | ✅ | 143 passed | **42/42 ×2** normal, **42/42** `?present=1`, presentation.cjs 18/18 |
 
-Merging: no conflicts between any of the PRs. Only snag: PR #1's `web/package-lock.json` clashes with a local untracked lock.
+`npm run build` ✅ on both (bundle 305 kB → 164 kB JS with #19, as Leaflet is no longer used).
 
-## Open PRs: review and recommended merge order
+**QA test change this run:** `web/e2e/demo-path.cjs` now detects which map is on the page (Leaflet or drawn) and runs the same checks on either. On the drawn map it adds two checks that don't rely on the map's own markup: bands match `/api/assess` for every paddock, and red/green washes are really painted red/green.
+
+## PRs merged since last check-in without a QA run (re-checked now on main)
+
+- **#17** (Logic): "at river level" / "N m below river level" (fixes BUG-008), and `river.observed_label`. ✅ on main. It also edited `tests/test_demo_path.py` (a QA file) to accept "at river level". The change is correct; next time please ask QA or leave a note.
+- **#18** (UI): river panel says when a reading is live during replay. ✅ on main.
+
+## Open PRs and merge order
 
 | Order | PR | Owner | Verdict |
 |---|---|---|---|
-| 1 | #2 Logic: Gemini validation, river, NZ time | T3 | ✅ ready (merge now; it fixes BUG-002). Follow-ups #9 and #10 can come in a later PR |
-| 2 | #5 UI: live_status banner, NZ-time-safe | T1 | ✅ ready. **Close #3** (contained in #5) |
-| 3 | #1 Story: About, SharePlan, pitch | T4 | ✅ ready (fix the pitch line in #11 before rehearsal) |
-| 4 | T1: map `fitBounds` fix (#6) + nifty-bohr PR with `isReplay` (#8) | T1 | not opened yet |
-| 5 | #4 Data: real terrain farm, LINZ cache, HBRC gauge | T2 | ✅ code ready, but **merge only after step 4**, or the map goes blank |
+| 1 | #20 UI follow-ups: remove Leaflet, Presentation mode, BUG-014/017 | T1 | ✅ ready (either order with #16) |
+| 2 | #16 QA status (this PR) | T5 | ✅ ready: QA files only, up to date with main |
 
 ## Top 3 risks
 
-1. **Blank map after the Data merge** (BUG-001). It's a one-line fix, but it must land before #4.
-2. **Live data creeping into the demo:** replay scores follow the real river (#9), Gemini has no timeout (#10), and map tiles need wifi (BUG-007). Rehearse once with wifi off.
-3. **Pitch honesty gaps:** the replay warning is still a SAMPLE (#11), and there's no farmer quote yet (judging angle e).
+1. **Late changes:** #19 (+1220 lines) is in and passes everything. Any further UI change risks the demo; **freeze UI features**, fixes only, and re-run the e2e after every merge. Rollback point: tag `pre-redesign`.
+2. **Phone: red paddocks start below the fold** with #19 (banner + safety line push the map down at 375×812). Fine on the projector; a phone viewer must scroll (BUG-017, P3).
+3. **No farmer quote yet:** judging angle (e).
 
 ## P1 / P2 bugs
 
-- P1 [#6](https://github.com/prasish01/highground/issues/6) T1: map centred away from the farm
-- P2 [#7](https://github.com/prasish01/highground/issues/7) T3: UTC deadline on main (fixed in PR #2)
-- P2 [#8](https://github.com/prasish01/highground/issues/8) T1: SharePlan without `isReplay`
-- P2 [#9](https://github.com/prasish01/highground/issues/9) T3: replay depends on the live river gauge
-- P2 [#10](https://github.com/prasish01/highground/issues/10) T3: Gemini has no timeout or cache
-- P2 [#11](https://github.com/prasish01/highground/issues/11) T4: pitch says "saved MetService warning" for a sample
+None open. All issues #6–#11 are fixed on main.
 
-Full list, including P3s: [`docs/bugs.md`](bugs.md).
+Full list: [`docs/bugs.md`](bugs.md).
 
 ## Direction check (judging angles)
 
 | Angle | Status | Note |
 |---|---|---|
-| (a) Real NZ data, credited | 🟡 | Real LINZ heights, OSM river and HBRC gauge, all credited in About and data-sources. The replay **warning** is still a sample, because MetService had no active warnings. Say so plainly. |
-| (b) One wow moment, offline | 🟡 | Red paddocks + banner work offline in the API and UI, but need BUG-001, and the map background is grey without tiles. |
-| (c) Responsible | 🟢 | Safety line everywhere; Gemini can't add digits (validated, template fallback); REPLAY labelled. Watch #8 and "risk 77/100" (BUG-014). |
-| (d) Polish: projector + mobile | 🟢 | Big banner and high contrast; 375px stacks cleanly with no overflow. |
-| (e) Real user voice | 🔴 | The interview guide is ready, but there's no quote yet. Prasish needs to do the 10-minute chat, or the pitch cuts that section. |
+| (a) Real NZ data, credited | 🟢 | LINZ heights, OSM river, HBRC gauge (with "live reading" label in replay), MetService format; sample warning labelled honestly |
+| (b) One wow moment, offline | 🟢 | With #19: stamps press on paddock by paddock, nothing needs the network |
+| (c) Responsible | 🟢 | Safety line pinned on every screen, REPLAY everywhere, Gemini validated with timeout, "at river level" instead of false precision |
+| (d) Polish: projector + mobile | 🟢 | #19 is legible from the back of the room; phone needs one scroll to see the reds |
+| (e) Real user voice | 🔴 | Still no farmer quote |
 
-**Scope:** no scope creep seen. Draw-your-own-paddocks hasn't started, which is good. Cut list if time runs short: river gauge → draw-your-own paddocks → live mode. **Never cut:** replay, red paddocks, banner, plan, safety line.
+**Scope:** #19 is a big change late in the day, but it serves angles (b) and (d) directly and removes the tile dependency, so I'd take it. **After #19, no more redesigns.** Cut list unchanged; draw-your-own-paddocks still not started (good).
 
 ## Next actions
 
-- **Teammate 1 (UI):** 🔝 fix #6 (`fitBounds` to the farm), then open the nifty-bohr PR with `isReplay` (#8); close #3.
-- **Teammate 2 (Data):** hold #4 until #6 lands; if possible, find a real past MetService CAP file (or confirm none is available) for #11.
-- **Teammate 3 (Logic):** follow-up PR for #9 (replay ignores the live gauge) and #10 (Gemini timeout and cache); "below river" wording (BUG-008).
-- **Teammate 4 (Story):** fix the pitch line at 0:50 (#11); update the README test count and team size (BUG-013).
-- **Prasish:** merge #2 → #5 → #1; add `*.tsbuildinfo` to `.gitignore`; book the farmer chat; decide whether to rehearse with wifi off.
-- **Teammate 5 (QA):** re-run integration after the UI fix; then remove the BUG-002 xfail once #2 is merged (it becomes a normal test on its own).
+- **Prasish:** merge #20 and #16; **then freeze UI**; record the backup demo video in Presentation mode (`/?present=1`); book the farmer chat.
+- **Teammate 1 (UI):** all QA notes done in #20 🎉. After it merges: fixes only.
+- **Teammate 2 (Data):** nothing blocking. 🎉
+- **Teammate 3 (Logic):** nothing blocking. Please leave QA files to QA (or ping first).
+- **Teammate 4 (Story):** match About/SharePlan to #19's shared styles (requested in #19); README test count (BUG-013); add the screenshot now the farm is final.
+- **Teammate 5 (QA):** re-run the e2e after every merge; final check before code freeze (1 h before judging).
