@@ -17,3 +17,6 @@
 | 2026-11-21 | Live warnings cached 10 min; feed down → 200 with `live_status: "unavailable"` | Never a 500 on stage; UI must not read "unavailable" as "all clear" |
 | 2026-11-21 | `river_rising` query param optional; when absent, the real gauge decides | Manual override still works for the demo; real data when present |
 | 2026-11-21 | Live paddock elevations replace placeholders at startup; river elevation still the GeoJSON value | Open item: river elevation should come from the same DEM, or heights above river are wrong |
+| 2026-11-21 | All farmer-facing times are New Zealand time (`ZoneInfo("Pacific/Auckland")`), whatever the server's time zone | A cloud server runs in UTC; "move by 4am" instead of "4pm" would be dangerous. The deadline is worked out in UTC then shown in NZ time so daylight saving can't shift the 3 h buffer |
+| 2026-11-21 | API sends ready-made labels (`deadline_label`, `onset_label`, `expires_label`) | The UI never formats times itself, so browser time zones can't disagree with the message |
+| 2026-11-21 | Bad elevation cache (missing, malformed, unknown ids, non-numeric) → log and keep GeoJSON value per paddock | Startup must never crash; the demo works offline |
