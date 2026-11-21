@@ -23,6 +23,10 @@ HighGround turns New Zealand severe weather warnings into a per-paddock plan. It
 3. Paddocks near the river turn red, and the banner says which paddock to move the herd to, and by when.
 4. Press **Show plan** for the storm checklist, then print or share it.
 
+On a projector, press **Presentation** (or open `/?present=1`): the side panel goes and the map and
+banner fill the screen. Press it again to go back. Browser checks: `node web/e2e/demo-path.cjs` and
+`node web/e2e/presentation.cjs` (API and web app running).
+
 ## How it works
 
 | Step | What happens |
