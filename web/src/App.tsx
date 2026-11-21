@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { GeoJSON, MapContainer, TileLayer } from "react-leaflet";
+import { GeoJSON, MapContainer, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
 import type { Feature } from "geojson";
 import { assess, getFarm, type Assessment, type Band, type Mode, type PaddockRisk } from "./api";
@@ -20,19 +20,36 @@ const BAND_LABEL: Record<Band, string> = {
 const API_DOWN =
   "Can't reach the HighGround server. Check the API is running (port 8000) and try again.";
 
-// Times are always shown in NZ time, whatever the laptop's clock or time zone is set to.
-const NZ_TIME = new Intl.DateTimeFormat("en-NZ", {
-  timeZone: "Pacific/Auckland",
-  hour: "numeric",
-  minute: "2-digit",
-});
+// Times: the UI never formats times itself. It shows the server's NZ-time labels
+// (deadline_label, onset_label, expires_label) so every screen and the plan agree.
 
-/** "2026-11-21T03:00:00+00:00" -> "4:00 pm" in Pacific/Auckland (raw text if not a date). */
-function clock(iso: string | null | undefined): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return NZ_TIME.format(d);
+const SHED_STYLE = { color: "#333", weight: 2, fillColor: "#9aa0a6", fillOpacity: 1 };
+
+/**
+ * Zooms the map to fit the paddocks once the farm loads, so the farm can move (e.g. to the real
+ * river) without changing code. The river line is left out: it can run far beyond the farm.
+ * Extra bottom padding keeps paddocks clear of the legend when it floats over the map.
+ */
+function FitToFarm({ farm }: { farm: GeoJSON.FeatureCollection }) {
+  const map = useMap();
+  useEffect(() => {
+    const paddocks = farm.features.filter((f) => f.properties?.kind !== "river");
+    if (paddocks.length === 0) return;
+    const bounds = L.geoJSON({ type: "FeatureCollection", features: paddocks } as GeoJSON.FeatureCollection).getBounds();
+    if (!bounds.isValid()) return;
+    const fit = () => {
+      const legend = document.querySelector(".legend");
+      const floating = legend && getComputedStyle(legend).position === "absolute";
+      const legendH = floating ? (legend as HTMLElement).offsetHeight + 12 : 0;
+      map.invalidateSize();
+      map.fitBounds(bounds, { paddingTopLeft: [24, 24], paddingBottomRight: [24, 24 + legendH] });
+    };
+    fit();
+    // Re-fit when the window changes size (rotate phone, projector resolution change).
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, [farm, map]);
+  return null;
 }
 
 /** Builds the paddock popup with DOM nodes (not an HTML string) so API text can't inject markup. */
@@ -105,6 +122,8 @@ export default function App() {
   const style = (f?: Feature) => {
     const kind = f?.properties?.kind;
     if (kind === "river") return { color: "#1d5fd1", weight: 6 };
+    // Only paddocks get red/amber/green; the shed is neutral grey.
+    if (kind === "shed") return SHED_STYLE;
     const band = riskById.get(f?.properties?.id)?.band ?? "green";
     return { color: "#222", weight: 1.5, fillColor: BAND_COLOUR[band], fillOpacity: 0.6 };
   };
@@ -128,8 +147,14 @@ export default function App() {
           </div>
           {/* Main text is the server's own message, e.g. "Move the herd to <paddock> by 4pm". */}
           {rec && <div className="move">{rec.message}</div>}
-          {/* No separate "Deadline" line: if the server isn't on NZ time, a second clock here
-              would contradict the message above and the plan. */}
+          {/* The deadline is already in the message; this adds the warning window, using the
+              server's NZ-time labels (never formatted here). */}
+          {w.onset_label && (
+            <div className="window">
+              Warning {w.onset_label}
+              {w.expires_label && <> – {w.expires_label}</>}
+            </div>
+          )}
         </header>
       ) : liveDown ? (
         // Never show "all clear" when we simply couldn't check.
@@ -182,7 +207,8 @@ export default function App() {
       {/* ---------- Map + side panel ---------- */}
       <main className="layout">
         <div className="map-wrap">
-          <MapContainer center={[-39.6265, 176.7253]} zoom={15} className="map">
+          {/* Starting view is all of NZ; FitToFarm zooms to the farm as soon as it loads. */}
+          <MapContainer center={[-41, 174]} zoom={5} className="map">
             <TileLayer
               attribution="&copy; OpenStreetMap contributors"
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -194,9 +220,7 @@ export default function App() {
                 data={farm}
                 style={style}
                 // Draw the shed as a circle (Leaflet's default pin images don't bundle with Vite).
-                pointToLayer={(_f, latlng) =>
-                  L.circleMarker(latlng, { radius: 8, color: "#222", fillColor: "#fff", fillOpacity: 1 })
-                }
+                pointToLayer={(_f, latlng) => L.circleMarker(latlng, { radius: 8, ...SHED_STYLE })}
                 onEachFeature={(f, layer) => {
                   const name = f.properties?.name;
                   if (!name) return;
@@ -207,6 +231,7 @@ export default function App() {
                 }}
               />
             )}
+            {farm && <FitToFarm farm={farm} />}
           </MapContainer>
 
           {!farm && (
@@ -239,7 +264,8 @@ export default function App() {
                 </span>
               </div>
               <div className="muted">
-                {river.site} · read at {clock(river.observed_at)}
+                {river.site}
+                {river.observed_label && <> · read at {river.observed_label}</>}
               </div>
             </section>
           )}
@@ -253,6 +279,8 @@ export default function App() {
               <h2>
                 Storm plan {w?.is_replay && <span className="tag-replay small">REPLAY</span>}
               </h2>
+              {/* Share first, so its REPLAY note is the first thing under the heading. */}
+              <SharePlan plan={result.plan} isReplay={result.warning?.is_replay ?? false} />
               <p>{result.plan.summary}</p>
               <ol className="moves">
                 {result.plan.moves.map((m, i) => (
@@ -270,8 +298,6 @@ export default function App() {
                   </li>
                 ))}
               </ul>
-              {/* TODO: add isReplay={result.warning?.is_replay ?? false} once SharePlan accepts it. */}
-              <SharePlan plan={result.plan} />
               <p className="muted">
                 Written by: {result.plan.source === "gemini" ? "Gemini (from the facts above)" : "template"}
               </p>
