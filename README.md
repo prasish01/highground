@@ -19,7 +19,7 @@ HighGround turns New Zealand severe weather warnings into a per-paddock plan. It
 ## The demo
 
 1. Open the sample Hawke's Bay farm (fictional).
-2. Press **Replay warning**: a saved heavy-rain warning is applied (clearly labelled *Replay*).
+2. Press **Replay warning**: a sample heavy-rain warning in the official MetService alert format is applied (clearly labelled *Replay*). Live mode checks the real MetService feed.
 3. Paddocks near the river turn red, and the banner says which paddock to move the herd to, and by when.
 4. Press **Show plan** for the storm checklist, then print or share it.
 
@@ -27,7 +27,7 @@ HighGround turns New Zealand severe weather warnings into a per-paddock plan. It
 
 | Step | What happens |
 |---|---|
-| Warnings | MetService CAP feed (`alerts.metservice.com/cap/rss`), or a saved warning in replay mode |
+| Warnings | MetService CAP feed (`alerts.metservice.com/cap/rss`), or a sample warning in replay mode |
 | Land | Paddock height above the river and distance to the river (elevation via Open Topo Data / LINZ 8 m DEM) |
 | Score | `0.6 × low ground + 0.4 × near river`, scaled by warning level (yellow 0.5, orange 0.8, red 1.0), +0.1 if the river is rising |
 | Recommend | Lowest-risk paddock with water and room for the herd; deadline = warning onset − 3 hours |
