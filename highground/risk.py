@@ -20,6 +20,7 @@ DISTANCE_WEIGHT = 0.4
 LEVEL_MULTIPLIER = {"none": 0.3, "yellow": 0.5, "orange": 0.8, "red": 1.0}
 RIVER_RISING_BONUS = 0.1
 MOVE_BUFFER = timedelta(hours=3)
+AT_RIVER_LEVEL_M = 1.0  # heights within ±1 m of the river read "at river level"
 
 # Every time a farmer sees is New Zealand time, whatever the server's own time zone is.
 NZ_TZ = ZoneInfo("Pacific/Auckland")
@@ -47,6 +48,16 @@ class Paddock:
     @property
     def area_ha(self) -> float:
         return area_ha(self.ring)
+
+
+def describe_height(height_m: float) -> str:
+    """Plain words for height above the river: '12 m above river', 'at river level', '3 m below
+    river level'. Elevation data is rough (about ±1 m), so near-zero reads as river level."""
+    if abs(height_m) <= AT_RIVER_LEVEL_M:
+        return "at river level"
+    if height_m > 0:
+        return f"{height_m:.0f} m above river"
+    return f"{-height_m:.0f} m below river level"
 
 
 @dataclass
@@ -92,7 +103,7 @@ def score_paddock(
         score += RIVER_RISING_BONUS
     score = round(_clamp01(score), 2)
 
-    parts = [f"{height:.0f} m above river", f"{distance:.0f} m from river"]
+    parts = [describe_height(height), f"{distance:.0f} m from river"]
     if in_warning:
         parts.append(f"inside {level} warning")
     if river_rising:

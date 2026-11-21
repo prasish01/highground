@@ -110,8 +110,10 @@ def test_step4_banner_names_a_safe_watered_paddock_and_a_time(client):
 
 def test_step5_every_paddock_has_a_reason(client):
     for p in replay(client)["paddocks"]:
-        # "below river" allowed: real heights can put a paddock under the median river level
-        assert re.search(r"(above|below) river", p["reason"]) and "from river" in p["reason"], p
+        # "below river level" / "at river level" allowed: real heights can put a paddock at or
+        # under the median river level (BUG-008)
+        height_words = r"(above|below) river|at river level"
+        assert re.search(height_words, p["reason"]) and "from river" in p["reason"], p
 
 
 def test_step6_plan_has_moves_and_checklist(client):
