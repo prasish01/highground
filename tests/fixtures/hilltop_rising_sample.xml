@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+<!--
+  SAMPLE (hand-made, NOT real data) in the same format as HBRC Hilltop GetData.
+  Shows a river rising after a steady first hour, for testing rising = true.
+-->
+<Hilltop>
+<Agency>HBRC</Agency>
+<Measurement SiteName="Ngaruroro River at Fernhill">
+<DataSource Name="Water Level" NumItems="1">
+<TSType>StdSeries</TSType>
+<DataType>SimpleTimeSeries</DataType>
+<Interpolation>Instant</Interpolation>
+<ItemInfo ItemNumber="1">
+<ItemName>Stage</ItemName><ItemFormat>F</ItemFormat><Units>mm</Units><Format>####</Format>
+</ItemInfo>
+</DataSource>
+<Data DateFormat="Calendar" NumItems="1">
+<E><T>2026-02-12T16:00:00</T><I1>2730</I1></E>
+<E><T>2026-02-12T16:05:00</T><I1>2733</I1></E>
+<E><T>2026-02-12T16:10:00</T><I1>2730</I1></E>
+<E><T>2026-02-12T16:15:00</T><I1>2733</I1></E>
+<E><T>2026-02-12T16:20:00</T><I1>2730</I1></E>
+<E><T>2026-02-12T16:25:00</T><I1>2733</I1></E>
+<E><T>2026-02-12T16:30:00</T><I1>2730</I1></E>
+<E><T>2026-02-12T16:35:00</T><I1>2733</I1></E>
+<E><T>2026-02-12T16:40:00</T><I1>2730</I1></E>
+<E><T>2026-02-12T16:45:00</T><I1>2733</I1></E>
+<E><T>2026-02-12T16:50:00</T><I1>2730</I1></E>
+<E><T>2026-02-12T16:55:00</T><I1>2733</I1></E>
+<E><T>2026-02-12T17:00:00</T><I1>2730</I1></E>
+<E><T>2026-02-12T17:05:00</T><I1>2773</I1></E>
+<E><T>2026-02-12T17:10:00</T><I1>2810</I1></E>
+<E><T>2026-02-12T17:15:00</T><I1>2853</I1></E>
+<E><T>2026-02-12T17:20:00</T><I1>2890</I1></E>
+<E><T>2026-02-12T17:25:00</T><I1>2933</I1></E>
+<E><T>2026-02-12T17:30:00</T><I1>2970</I1></E>
+<E><T>2026-02-12T17:35:00</T><I1>3013</I1></E>
+<E><T>2026-02-12T17:40:00</T><I1>3050</I1></E>
+<E><T>2026-02-12T17:45:00</T><I1>3093</I1></E>
+<E><T>2026-02-12T17:50:00</T><I1>3130</I1></E>
+<E><T>2026-02-12T17:55:00</T><I1>3173</I1></E>
+<E><T>2026-02-12T18:00:00</T><I1>3210</I1></E>
+</Data>
+</Measurement>
+</Hilltop>
