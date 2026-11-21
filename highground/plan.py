@@ -11,6 +11,9 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import TimeoutError as FutureTimeout
 from typing import Any
 
 from .cap import Warning
@@ -19,6 +22,9 @@ from .risk import PaddockRisk, Recommendation, format_time
 MAX_CHECKLIST = 8
 MAX_MOVES = 8
 GEMINI_ATTEMPTS = 2  # first try + one retry
+GEMINI_BUDGET_S = 8.0  # total time for Gemini, both attempts together, before the template
+FAILED_PLAN_TTL_S = 120.0  # after a failure, use the template for these facts for 2 minutes
+PLAN_CACHE_MAX = 64
 
 SYSTEM_PROMPT = """You write short, practical storm plans for New Zealand farmers.
 
@@ -145,11 +151,14 @@ def validate_plan(raw: Any, f: dict[str, Any]) -> dict[str, Any] | None:
     return clean
 
 
-def _generate(api_key: str, prompt: str) -> str:
+def _generate(api_key: str, prompt: str, timeout_s: float) -> str:
     """One Gemini call. Kept separate so tests can replace it (no network in tests)."""
     from google import genai  # imported lazily so tests don't need it
 
-    client = genai.Client(api_key=api_key)
+    client = genai.Client(
+        api_key=api_key,
+        http_options={"timeout": max(1, int(timeout_s * 1000))},  # milliseconds
+    )
     response = client.models.generate_content(
         model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash"),
         contents=prompt,
@@ -158,19 +167,69 @@ def _generate(api_key: str, prompt: str) -> str:
     return response.text or ""
 
 
-def make_plan(f: dict[str, Any]) -> dict[str, Any]:
-    api_key = os.getenv("GEMINI_API_KEY")
-    if not api_key:
-        return {**template_plan(f), "source": "template"}
+# Gemini runs on a worker thread so we can stop waiting at the deadline even if the SDK
+# doesn't. A slow call is simply abandoned; the farmer gets the template straight away.
+_pool = ThreadPoolExecutor(max_workers=2, thread_name_prefix="gemini")
 
+# Plans by facts, so pressing Replay again doesn't call Gemini again.
+# key -> (time stored, plan). Template fallbacks expire so Gemini is tried again later.
+_plan_cache: dict[str, tuple[float, dict[str, Any]]] = {}
+
+
+def _cache_key(f: dict[str, Any]) -> str:
+    return json.dumps(f, sort_keys=True)
+
+
+def _cached(key: str) -> dict[str, Any] | None:
+    hit = _plan_cache.get(key)
+    if hit is None:
+        return None
+    stored_at, result = hit
+    if result["source"] != "gemini" and time.monotonic() - stored_at > FAILED_PLAN_TTL_S:
+        del _plan_cache[key]
+        return None
+    return json.loads(json.dumps(result))  # a copy, so callers can't change the cache
+
+
+def _remember(key: str, result: dict[str, Any]) -> None:
+    if len(_plan_cache) >= PLAN_CACHE_MAX:
+        _plan_cache.pop(next(iter(_plan_cache)))  # drop the oldest
+    _plan_cache[key] = (time.monotonic(), result)
+
+
+def _ask_gemini(api_key: str, f: dict[str, Any]) -> dict[str, Any]:
+    """Up to two Gemini attempts within GEMINI_BUDGET_S in total; template on failure."""
     prompt = f"{SYSTEM_PROMPT}\n\nFACTS:\n{json.dumps(f)}"
+    deadline = time.monotonic() + GEMINI_BUDGET_S
     error = "Gemini reply did not match the plan format"
     for _ in range(GEMINI_ATTEMPTS):
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            error = f"Gemini timed out after {GEMINI_BUDGET_S:g} s"
+            break
         try:
-            plan = validate_plan(json.loads(_generate(api_key, prompt)), f)
+            future = _pool.submit(_generate, api_key, prompt, remaining)
+            plan = validate_plan(json.loads(future.result(timeout=remaining)), f)
+        except FutureTimeout:
+            error = f"Gemini timed out after {GEMINI_BUDGET_S:g} s"
+            break  # no time left for a retry
         except Exception as exc:  # demo must never break on stage
             error = f"{type(exc).__name__}: {exc}"
             continue
         if plan is not None:
             return {**plan, "source": "gemini"}
     return {**template_plan(f), "source": "template", "error": error}
+
+
+def make_plan(f: dict[str, Any]) -> dict[str, Any]:
+    api_key = os.getenv("GEMINI_API_KEY")
+    if not api_key or f.get("warning") is None:  # no warning: the template plan is enough
+        return {**template_plan(f), "source": "template"}
+
+    key = _cache_key(f)
+    cached = _cached(key)
+    if cached is not None:
+        return cached
+    result = _ask_gemini(api_key, f)
+    _remember(key, result)
+    return json.loads(json.dumps(result))

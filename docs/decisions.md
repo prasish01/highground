@@ -20,3 +20,6 @@
 | 2026-11-21 | All farmer-facing times are New Zealand time (`ZoneInfo("Pacific/Auckland")`), whatever the server's time zone | A cloud server runs in UTC; "move by 4am" instead of "4pm" would be dangerous. The deadline is worked out in UTC then shown in NZ time so daylight saving can't shift the 3 h buffer |
 | 2026-11-21 | API sends ready-made labels (`deadline_label`, `onset_label`, `expires_label`) | The UI never formats times itself, so browser time zones can't disagree with the message |
 | 2026-11-21 | Bad elevation cache (missing, malformed, unknown ids, non-numeric) → log and keep GeoJSON value per paddock | Startup must never crash; the demo works offline |
+| 2026-11-21 | Calm and replay assume a steady river unless `river_rising` is passed; only live mode uses the gauge for scoring (#9) | The rehearsed demo must look the same on stage whatever the real river is doing; the reading is still shown |
+| 2026-11-21 | Gemini gets 8 s in total (both attempts), then the template; plans cached per unique facts, fallbacks for 2 min (#10) | Slow venue wifi must never hang the Replay button |
+| 2026-11-21 | No warning → template plan, no Gemini call | Nothing for the model to add; saves a call on every page load |
