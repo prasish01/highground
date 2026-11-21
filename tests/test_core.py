@@ -6,7 +6,16 @@ from highground.cap import as_replay, parse_cap
 from highground.farm import DATA_DIR, load_farm
 from highground.geo import area_ha, distance_to_line_m, haversine_m, point_in_polygon
 from highground.plan import facts, template_plan
-from highground.risk import NZ_TZ, band, format_time, recommend, score_paddock, to_nz
+from highground.risk import (
+    NZ_TZ,
+    Paddock,
+    band,
+    describe_height,
+    format_time,
+    recommend,
+    score_paddock,
+    to_nz,
+)
 
 NZDT = timezone(timedelta(hours=13))
 
@@ -66,6 +75,35 @@ def test_warning_covers_the_sample_farm(farm, warning):
 
 
 # --- risk scoring -----------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("height", "words"),
+    [
+        (12.4, "12 m above river"),
+        (1.6, "2 m above river"),
+        (1.0, "at river level"),
+        (0.3, "at river level"),
+        (0.0, "at river level"),
+        (-0.6, "at river level"),
+        (-1.0, "at river level"),
+        (-1.4, "1 m below river level"),
+        (-3.2, "3 m below river level"),
+    ],
+)
+def test_describe_height(height, words):
+    assert describe_height(height) == words
+
+
+def test_reason_never_says_negative_metres_above_river(farm):
+    # BUG-008: a paddock slightly below the river median read "-1 m above river".
+    low = Paddock("low", "Low paddock", farm.paddocks[0].ring, farm.river_elevation_m - 0.8)
+    under = Paddock("under", "Under paddock", farm.paddocks[0].ring, farm.river_elevation_m - 2.6)
+    low_reason = score_paddock(low, farm.river, farm.river_elevation_m, None).reason
+    under_reason = score_paddock(under, farm.river, farm.river_elevation_m, None).reason
+    assert low_reason.startswith("at river level, ")
+    assert under_reason.startswith("3 m below river level, ")
+    assert "-" not in low_reason + under_reason
 
 
 def test_band_thresholds():
