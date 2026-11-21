@@ -45,7 +45,10 @@ export default function About() {
         <li>
           Elevation: Toitū Te Whenua LINZ elevation data, served via Open Topo Data (CC BY 4.0).
         </li>
-        <li>River levels: Hawke's Bay Regional Council (CC BY 4.0).</li>
+        <li>
+          River gauge: Hawke's Bay Regional Council, Ngaruroro River at Fernhill (Stage,
+          Telemetry.hts), CC BY 4.0. The river panel only appears when the gauge responds.
+        </li>
         <li>Map data: © OpenStreetMap contributors.</li>
       </ul>
 
