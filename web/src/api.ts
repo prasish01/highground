@@ -11,6 +11,13 @@ export interface PaddockRisk {
   distance_to_river_m: number;
 }
 
+export interface RiverReading {
+  site: string;
+  level_m: number;
+  observed_at: string;
+  rising: boolean;
+}
+
 export interface Assessment {
   mode: Mode;
   warning: null | {
@@ -30,6 +37,8 @@ export interface Assessment {
     source: "gemini" | "template";
   };
   disclaimer: string;
+  /** Optional: river gauge reading. May be missing or null (e.g. gauge offline). */
+  river?: RiverReading | null;
 }
 
 export async function getFarm(): Promise<GeoJSON.FeatureCollection> {
