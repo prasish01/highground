@@ -131,12 +131,8 @@ export default function App() {
           </div>
           {/* Main text is the server's own message, e.g. "Move the herd to <paddock> by 4pm". */}
           {rec && <div className="move">{rec.message}</div>}
-          {rec?.deadline && (
-            <div className="deadline">
-              Deadline <strong>{clock(rec.deadline)}</strong> NZ time
-              {w.onset && <> · warning starts {clock(w.onset)}</>}
-            </div>
-          )}
+          {/* No separate "Deadline" line: if the server isn't on NZ time, a second clock here
+              would contradict the message above and the plan. */}
         </header>
       ) : liveDown ? (
         // Never show "all clear" when we simply couldn't check.

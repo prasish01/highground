@@ -32,8 +32,6 @@ body { margin: 0; background: #eef0ec; }
 .tag-replay.small { font-size: 0.7rem; padding: 1px 6px; vertical-align: middle; }
 .move { font-size: clamp(1.8rem, 4.5vw, 3.4rem); font-weight: 900; line-height: 1.1; margin-top: 8px; }
 .move-calm { font-size: clamp(1.1rem, 2.2vw, 1.5rem); font-weight: 600; }
-.deadline { font-size: clamp(1.1rem, 2vw, 1.5rem); margin-top: 6px; }
-.deadline strong { background: rgba(0, 0, 0, 0.3); padding: 0 8px; border-radius: 4px; }
 
 /* ---------- Controls ---------- */
 .controls { display: flex; gap: 10px; padding: 12px 20px; flex-wrap: wrap; align-items: center; }
