@@ -30,7 +30,7 @@ Warnings are issued per region; the farmer's decision is per paddock. HighGround
 - API: `GET /api/farm` (GeoJSON paddocks, river LineString, shed Point), `GET /api/assess?mode=` (warning, per-paddock score/band/reason, recommendation, plan, river reading, live_status, server-formatted NZ time labels).
 - The UI never formats times itself; it shows server labels.
 - Paddock names and the recommended paddock come from the API; never hard-coded.
-- Stack: Vite + React + TypeScript, Leaflet / react-leaflet.
+- Stack: Vite + React + TypeScript. The farm is drawn as plain SVG (no Leaflet, no map tiles).
 
 ## Brand Commitments
 

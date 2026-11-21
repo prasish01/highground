@@ -297,15 +297,74 @@ p { margin: 0; }
 .modal-body h2 { font-family: var(--display); }
 @keyframes card-in-modal { from { opacity: 0; transform: translateY(10px); } }
 
+/* ---------- Presentation (projector): ?present=1 or the Presentation button ----------
+   The side panel goes; the banner becomes a tall column on the left and the map takes the
+   whole height on the right, so the farm is about twice the size on a 1366x768 projector.
+   .layout steps aside (display: contents) so the map and sheet sit straight in the .app grid. */
+@media (min-width: 821px) {
+  .app.is-present {
+    display: grid; height: 100vh; height: 100dvh; overflow: hidden;
+    grid-template-columns: minmax(340px, 28%) minmax(0, 1fr);
+    grid-template-rows: auto auto auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "top top" "banner map" "error map" "sheet map" "legend map" "safe safe";
+  }
+  .is-present .topbar { grid-area: top; padding: 6px 24px; }
+  .is-present .topbar .btn { min-height: 40px; }
+  .is-present .banner { grid-area: banner / banner / sheet / banner; padding: 18px 24px; }
+  .is-present .error { grid-area: error; margin: 12px 16px 0; align-self: start; }
+  .is-present .layout { display: contents; }
+  .is-present .map-card {
+    grid-area: map; margin: 12px 16px; padding: 10px; min-height: 0;
+    grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr);
+  }
+  .is-present .farm-map { height: 100%; min-height: 0; }
+  /* Fill the card; the viewBox keeps the farm's shape and centres it. */
+  .is-present .farm-svg { height: 100%; max-height: none; aspect-ratio: auto !important; }
+  /* The legend sits on paper at the foot of the banner column. */
+  .is-present .map-card .legend { display: none; }
+  .is-present .legend-side {
+    display: flex; grid-area: legend; margin: 0; padding: 14px 24px 16px; gap: 10px;
+    border-left: none; background: var(--paper-sheet) var(--grain);
+  }
+  .is-present .legend-hint { max-width: none; }
+  .is-present.plan-open .legend-side { display: none; }
+  .is-present .sheet { display: none; }
+  .is-present .safety { grid-area: safe; position: static; }
+  .is-present .move { font-size: clamp(2.2rem, 4.2vw, 4rem); margin-top: 10px; }
+  .is-present .window { margin-top: 10px; }
+
+  /* Show plan in presentation: the banner shrinks to the top of the column, the plan scrolls under it. */
+  .is-present.plan-open .banner { grid-area: banner; }
+  .is-present.plan-open .move { font-size: clamp(1.6rem, 2.4vw, 2.3rem); }
+  .is-present.plan-open .sheet {
+    display: block; grid-area: sheet; min-height: 0; max-height: none;
+    margin: 12px 0 12px 16px;
+  }
+  .is-present.plan-open .river-panel { display: none; }
+}
+
+.legend-side { display: none; }
+
 /* ---------- Phone (375px) ---------- */
 @media (max-width: 820px) {
   :root { font-size: 17px; }
   .topbar { padding: 10px 14px 12px; }
   .brand-name { font-size: 1.45rem; }
-  .controls { display: grid; grid-template-columns: 1fr 1fr; width: 100%; gap: 8px; }
-  .controls .btn-primary { grid-column: 1 / -1; min-height: 52px; font-size: 1.15rem; }
+  /* Compact header and banner, so the MOVE OUT paddocks start in the first screen (BUG-017).
+     Replay + About on one row, the other modes three across below. */
+  .topbar { gap: 8px; }
+  .controls { display: grid; grid-template-columns: repeat(3, 1fr); width: 100%; gap: 8px; }
+  .controls .btn { min-height: 44px; padding: 0 8px; font-size: 0.95rem; }
+  .controls .btn-primary { grid-column: span 2; min-height: 48px; font-size: 1.1rem; order: -2; }
+  .controls .btn-quiet { order: -1; min-height: 48px; }
   .btn-quiet { border-color: rgba(246, 248, 239, 0.55); text-decoration: none; }
-  .banner { padding: 14px 14px 16px; }
+  /* A projector mode has no use on a phone. */
+  .btn-present { display: none; }
+  .banner { padding: 10px 14px 12px; }
+  .banner-top { font-size: 0.95rem; }
+  .banner-level { font-size: 1.05rem; }
+  .move { font-size: 1.75rem; }
+  .window { font-size: 1rem; }
   .layout { grid-template-columns: 1fr; padding: 14px 12px 16px; gap: 14px; }
   .map-card { padding: 8px 8px 10px; grid-template-columns: 1fr; }
   .farm-svg { max-height: none; }

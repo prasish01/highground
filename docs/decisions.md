@@ -10,6 +10,7 @@
 | 2026-11-21 | Hawke's Bay as the demo region | Gabrielle context; HBRC river data is open (CC BY 4.0) |
 | 2026-11-21 | Open Topo Data nzdem8m for elevation | Free, no key, fast enough for a hackathon; LINZ 1 m LiDAR as the upgrade |
 | 2026-11-21 | FastAPI + React + Leaflet | Familiar stack; Vite proxy avoids CORS |
+| 2026-11-21 | Leaflet removed; the farm is drawn as plain SVG (#19 follow-up) | No tiles means the demo works fully offline; one less dependency to explain |
 | 2026-11-21 | Risk thresholds unchanged (SAFE_HEIGHT_M 10, SAFE_DISTANCE_M 500, weights 0.6/0.4, buffer 3 h) | Demo path and tests depend on them; no evidence yet to retune |
 | 2026-11-21 | Gemini replies are validated; one retry, then template | Bad JSON or an invented fact must never reach a farmer |
 | 2026-11-21 | Gemini reply rejected if it contains any number not in the facts | Simple, explainable guard against invented times, amounts, phone numbers |

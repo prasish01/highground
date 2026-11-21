@@ -54,7 +54,7 @@ cd web && npm run dev                                   # UI on :5173 (proxies /
 - `highground/elevation.py` — Open Topo Data nzdem8m lookups (max 100 points per call)
 - `highground/plan.py` — Gemini plan with template fallback
 - `highground/main.py` — FastAPI: `GET /api/farm`, `GET /api/assess?mode=calm|replay|live&river_rising=`
-- `web/` — React + Leaflet; `src/App.tsx` is the whole UI for now
+- `web/` — React; `src/App.tsx` is the shell, `src/components/FarmMap.tsx` draws the farm in SVG (no map tiles)
 
 ## Status
 

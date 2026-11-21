@@ -24,6 +24,12 @@ const LEGEND: Record<Band, string> = { red: "high risk", amber: "could flood", g
 
 const LEVEL_WORD: Record<string, string> = { red: "Red", orange: "Orange", yellow: "Yellow" };
 
+// Presentation mode (for the projector): ?present=1 in the URL, or the Presentation button.
+// It hides the side panel so the map and the banner fill the screen.
+function presentFromUrl(): boolean {
+  return new URLSearchParams(window.location.search).get("present") === "1";
+}
+
 export default function App() {
   const [farm, setFarm] = useState<GeoJSON.FeatureCollection | null>(null);
   const [mode, setMode] = useState<Mode>("calm");
@@ -31,6 +37,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [showPlan, setShowPlan] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [present, setPresent] = useState(presentFromUrl);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0); // bump to retry after an error
 
@@ -75,6 +82,14 @@ export default function App() {
     return m;
   }, [result]);
 
+  // Keep the URL in step, so a reload (or a bookmark) stays in presentation mode.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (present) url.searchParams.set("present", "1");
+    else url.searchParams.delete("present");
+    window.history.replaceState(null, "", url);
+  }, [present]);
+
   const retry = useCallback(() => setAttempt((a) => a + 1), []);
 
   const w = result?.warning;
@@ -83,7 +98,7 @@ export default function App() {
   const liveDown = result?.mode === "live" && result.live_status === "unavailable";
 
   return (
-    <div className="app">
+    <div className={`app${present ? " is-present" : ""}${showPlan ? " plan-open" : ""}`}>
       {/* ---------- Header: name and the modes ---------- */}
       <header className="topbar">
         <div className="brand">
@@ -106,6 +121,9 @@ export default function App() {
           </button>
           <button className="btn" onClick={() => setShowPlan((s) => !s)} disabled={!result} aria-pressed={showPlan}>
             {showPlan ? "Hide plan" : "Show plan"}
+          </button>
+          <button className="btn btn-present" onClick={() => setPresent((p) => !p)} aria-pressed={present}>
+            Presentation
           </button>
           <button className="btn btn-quiet" onClick={() => setShowAbout(true)}>
             About
@@ -162,6 +180,10 @@ export default function App() {
         </div>
       )}
 
+      {/* Presentation: a second legend under the banner, so the map gets the full height. CSS shows
+          one or the other (on a phone the map-card legend stays, presentation or not). */}
+      {present && <Legend side />}
+
       {/* ---------- Map + side sheet ---------- */}
       <main className={`layout${loading ? " is-loading" : ""}`}>
         <section className="map-card" aria-label="Farm map">
@@ -170,16 +192,7 @@ export default function App() {
           ) : (
             <p className="map-empty">{error ? "The farm map can't load without the server." : "Drawing the farm…"}</p>
           )}
-          <ul className="legend" aria-label="Map legend">
-            {(["red", "amber", "green"] as Band[]).map((b) => (
-              <li key={b}>
-                <span className={`legend-wash wash-${b}`} aria-hidden="true" />
-                <span className={`chip chip-${b}`}>{BAND_WORDS[b].stamp}</span>
-                <span className="legend-words">{LEGEND[b]}</span>
-              </li>
-            ))}
-            <li className="legend-hint">Tap a paddock to see why</li>
-          </ul>
+          <Legend />
         </section>
 
         <aside className="sheet">
@@ -270,5 +283,20 @@ export default function App() {
         </div>
       )}
     </div>
+  );
+}
+
+function Legend({ side = false }: { side?: boolean }) {
+  return (
+    <ul className={side ? "legend legend-side" : "legend"} aria-label="Map legend">
+      {(["red", "amber", "green"] as Band[]).map((b) => (
+        <li key={b}>
+          <span className={`legend-wash wash-${b}`} aria-hidden="true" />
+          <span className={`chip chip-${b}`}>{BAND_WORDS[b].stamp}</span>
+          <span className="legend-words">{LEGEND[b]}</span>
+        </li>
+      ))}
+      <li className="legend-hint">Tap a paddock to see why</li>
+    </ul>
   );
 }

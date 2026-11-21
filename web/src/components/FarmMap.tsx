@@ -311,9 +311,8 @@ export default function FarmMap({ farm, risks, stamped, herdTo }: Props) {
             </svg>
           </button>
           <strong>{openName}</strong>
-          <span className={`chip chip-${openRisk.band}`}>
-            {BAND_WORDS[openRisk.band].stamp} · risk {Math.round(openRisk.score * 100)}/100
-          </span>
+          {/* The band word and the reason say it all; a raw score invites "is 77 bad?" (BUG-014). */}
+          <span className={`chip chip-${openRisk.band}`}>{BAND_WORDS[openRisk.band].stamp}</span>
           <p>{openRisk.reason}</p>
         </div>
       )}
