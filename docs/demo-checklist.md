@@ -38,7 +38,7 @@ npm run dev
 curl -s "http://localhost:8000/api/assess?mode=replay"
 ```
 
-You should see red paddocks and a recommendation that mentions Paddock 7.
+You should see red paddocks and a recommendation naming a paddock. Note which one: the presenter reads it off the banner as [paddock shown].
 
 ## 4. Browser tabs (in this order)
 
@@ -81,6 +81,8 @@ If the venue Wi-Fi is slow, turn it off before the pitch rather than risk a half
 
 ## 8. Last checks
 
+- [ ] Set the demo laptop to NZ time
+- [ ] Open the app once while online so map tiles are cached
 - [ ] `pytest` passes
 - [ ] Banner shows **REPLAY** in replay mode
 - [ ] Safety line visible: "Official MetService warnings and Civil Defence advice always come first. This is guidance, not a guarantee."
