@@ -1,14 +1,15 @@
 # QA status
 
-**2026-11-21 15:25 NZDT** · Teammate 5 (QA + Direction) · overwritten each check-in
+**2026-11-21 15:50 NZDT** · Teammate 5 (QA + Direction) · overwritten each check-in
 
 ## Overall: 🟢 Green
 
-- **main 🟢:** everything from the last check-in is merged, in the right order (#14 → #15 → #13 → #17 → #18 → #4). 143 tests pass; demo path **38/38** at 1366px and 375px (run twice); NZ time on a UTC server.
-- **One open feature PR: #19 (hand-drawn map redesign)**. ✅ Ready: 143 tests, build clean, demo path **42/42** with QA's extra checks (×2), **zero network requests** (fully offline).
-- **#16 (this QA PR) and #19 both edit `web/e2e/demo-path.cjs`.** Merge #19 first; QA then merges main into #16 and keeps the dual-map test.
+- **main 🟢 with #19 merged** (hand-drawn map; rollback tag `pre-redesign` exists). 143 tests pass; demo path **42/42** at 1366px and 375px (run twice), including QA's independent checks (bands match the API, washes really red/green).
+- **Fully offline on main:** with the page loaded and Replay pressed, **zero requests leave localhost**. This is the wifi-off rehearsal check, done in the browser.
+- **No open feature PRs.** #16 (this QA PR) is updated with main; the e2e conflict is resolved (kept QA's dual-map test). **Ready to merge.**
+- **UI freeze from now:** fixes only. Re-run `node web/e2e/demo-path.cjs` after every merge.
 
-## Demo path, step by step (main + #19)
+## Demo path, step by step (main, with #19)
 
 | Step | Desktop 1366 | Mobile 375 | Notes |
 |---|---|---|---|
@@ -30,10 +31,9 @@ On main today (Leaflet map) the same path is 38/38, with tiles needing wifi.
 
 | Where | Merge | ruff + format | pytest | Browser |
 |---|---|---|---|---|
-| main | — | ✅ | **143 passed** | 38/38 ×2 (Leaflet) |
-| main + #19 | clean | ✅ | 143 passed | **42/42 ×2** (drawn; +4 QA independent checks) |
-| main + #16 (this PR) | clean | ✅ | 143 passed | — |
-| #16 + #19 | **conflict** in `web/e2e/demo-path.cjs` (both edit it) | | | |
+| main before #19 | — | ✅ | 143 passed | 38/38 ×2 (Leaflet) |
+| **main now (with #19)** | — | ✅ | **143 passed** | **42/42 ×2** (drawn; incl. 4 QA independent checks) |
+| main + #16 (this PR) | clean (conflict resolved here) | ✅ | 143 passed | 42/42 (same test) |
 
 `npm run build` ✅ on both (bundle 305 kB → 164 kB JS with #19, as Leaflet is no longer used).
 
@@ -48,12 +48,11 @@ On main today (Leaflet map) the same path is 38/38, with tiles needing wifi.
 
 | Order | PR | Owner | Verdict |
 |---|---|---|---|
-| 1 | #19 UI redesign: hand-drawn map with stamped warnings | T1 | ✅ ready (see review) |
-| 2 | #16 QA status (this PR) | T5 | Merge after #19; QA resolves the e2e conflict |
+| 1 | #16 QA status (this PR) | T5 | ✅ ready: QA files only, up to date with main |
 
 ## Top 3 risks
 
-1. **Late, large UI change (#19):** it passes everything, but it's +1220 lines. After it merges, **freeze UI features**: fixes only, and re-run the e2e after every merge.
+1. **Late changes:** #19 (+1220 lines) is in and passes everything. Any further UI change risks the demo; **freeze UI features**, fixes only, and re-run the e2e after every merge. Rollback point: tag `pre-redesign`.
 2. **Phone: red paddocks start below the fold** with #19 (banner + safety line push the map down at 375×812). Fine on the projector; a phone viewer must scroll (BUG-017, P3).
 3. **No farmer quote yet:** judging angle (e).
 
@@ -77,9 +76,9 @@ Full list: [`docs/bugs.md`](bugs.md).
 
 ## Next actions
 
-- **Prasish:** merge **#19**, then #16; book the farmer chat; tell the team UI is frozen after #19.
+- **Prasish:** merge #16; book the farmer chat; tell the team UI is frozen; record the backup demo video from main now.
 - **Teammate 1 (UI):** after #19: remove the unused Leaflet deps (follow-up); BUG-017 (reds below the fold on phones); BUG-014 ("risk 77/100").
 - **Teammate 2 (Data):** nothing blocking. 🎉
 - **Teammate 3 (Logic):** nothing blocking. Please leave QA files to QA (or ping first).
 - **Teammate 4 (Story):** match About/SharePlan to #19's shared styles (requested in #19); README test count (BUG-013); add the screenshot now the farm is final.
-- **Teammate 5 (QA):** after #19 merges, merge main into #16 and keep the dual-map test; full e2e on main; wifi-off rehearsal check.
+- **Teammate 5 (QA):** re-run the e2e after every merge; final check before code freeze (1 h before judging).
