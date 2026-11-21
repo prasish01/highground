@@ -3,11 +3,8 @@ import { GeoJSON, MapContainer, TileLayer } from "react-leaflet";
 import L from "leaflet";
 import type { Feature } from "geojson";
 import { assess, getFarm, type Assessment, type Band, type Mode, type PaddockRisk } from "./api";
-// TODO(teammate 4): when web/src/components/About.tsx and SharePlan.tsx land on main, replace
-// the two fallbacks below with:
-//   import About from "./components/About";
-//   import SharePlan from "./components/SharePlan";
-// and delete AboutFallback / SharePlanFallback at the bottom of this file.
+import About from "./components/About";
+import SharePlan from "./components/SharePlan";
 
 // Always shown, even while loading or when the API is down (hard rule 1).
 const SAFETY =
@@ -273,7 +270,8 @@ export default function App() {
                   </li>
                 ))}
               </ul>
-              <SharePlanFallback plan={result.plan} isReplay={!!w?.is_replay} />
+              {/* TODO: add isReplay={result.warning?.is_replay ?? false} once SharePlan accepts it. */}
+              <SharePlan plan={result.plan} />
               <p className="muted">
                 Written by: {result.plan.source === "gemini" ? "Gemini (from the facts above)" : "template"}
               </p>
@@ -302,53 +300,10 @@ export default function App() {
             <button className="modal-close" onClick={() => setShowAbout(false)} aria-label="Close">
               ×
             </button>
-            <AboutFallback />
+            <About />
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
-// TODO(teammate 4): temporary stand-ins. Delete once components/About.tsx and
-// components/SharePlan.tsx exist on main, and use the imports at the top instead.
-// ---------------------------------------------------------------------------
-
-function AboutFallback() {
-  return (
-    <section>
-      <h2>About HighGround</h2>
-      <p>Turns severe weather warnings into a per-paddock plan for moving stock to higher ground.</p>
-      <p>
-        <strong>Data:</strong> MetService (warnings), LINZ via Open Topo Data (elevation), Hawke's Bay
-        Regional Council (river levels), © OpenStreetMap contributors (base map).
-      </p>
-      <p>
-        <strong>{SAFETY}</strong>
-      </p>
-    </section>
-  );
-}
-
-function SharePlanFallback({ plan, isReplay }: { plan: Assessment["plan"]; isReplay: boolean }) {
-  const [copied, setCopied] = useState(false);
-  const text = [
-    ...(isReplay ? ["REPLAY – practice warning, not a live alert"] : []),
-    plan.summary, ...plan.moves.map((m) => `${m.time}: ${m.action}`), ...plan.checklist.map((c) => `- ${c}`), SAFETY].join("\n");
-  return (
-    <div className="share">
-      <button
-        onClick={() =>
-          navigator.clipboard?.writeText(text).then(
-            () => setCopied(true),
-            () => setCopied(false),
-          )
-        }
-      >
-        {copied ? "Copied" : "Copy plan"}
-      </button>
-      <button onClick={() => window.print()}>Print</button>
     </div>
   );
 }
