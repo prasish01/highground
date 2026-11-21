@@ -263,10 +263,14 @@ export default function App() {
                   {river.rising ? "▲ rising" : "● steady"}
                 </span>
               </div>
-              <div className="muted">
-                {river.site}
-                {river.observed_label && <> · read at {river.observed_label}</>}
-              </div>
+              <div className="muted">{river.site}</div>
+              {/* Server-formatted NZ time; shown only when the API sends it. */}
+              {river.observed_label && <div className="muted">Read at {river.observed_label}</div>}
+              {/* In replay the warning is a recording but the gauge is real and doesn't change
+                  the scores (docs/decisions.md), so say so. */}
+              {result?.mode === "replay" && (
+                <div className="river-note">Live reading, not part of the replay</div>
+              )}
             </section>
           )}
 

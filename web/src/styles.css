@@ -83,6 +83,7 @@ button.primary:hover { background: #8f1016; }
 .river-level { font-size: 1.6rem; font-weight: 800; }
 .trend { font-size: 1rem; padding: 2px 8px; border-radius: 4px; vertical-align: middle; }
 .trend-rising { background: var(--red); color: #fff; }
+.river-note { margin-top: 6px; font-weight: 700; font-size: 0.95rem; }
 .trend-steady { background: #dfe7e2; color: var(--calm); }
 
 /* ---------- Paddock popup ---------- */
