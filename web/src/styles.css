@@ -31,6 +31,7 @@ body { margin: 0; background: #eef0ec; }
 }
 .tag-replay.small { font-size: 0.7rem; padding: 1px 6px; vertical-align: middle; }
 .move { font-size: clamp(1.8rem, 4.5vw, 3.4rem); font-weight: 900; line-height: 1.1; margin-top: 8px; }
+.window { font-size: clamp(1.1rem, 2vw, 1.5rem); margin-top: 6px; font-weight: 600; }
 .move-calm { font-size: clamp(1.1rem, 2.2vw, 1.5rem); font-weight: 600; }
 
 /* ---------- Controls ---------- */

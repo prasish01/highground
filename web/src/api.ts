@@ -16,6 +16,8 @@ export interface RiverReading {
   level_m: number;
   observed_at: string;
   rising: boolean;
+  /** Optional server-formatted NZ time, e.g. "3:45pm". Shown only if the API sends it. */
+  observed_label?: string | null;
 }
 
 export interface Assessment {
@@ -27,9 +29,18 @@ export interface Assessment {
     onset: string;
     expires: string;
     is_replay: boolean;
+    /** Server-formatted NZ times, e.g. "7am". The UI shows these and never formats times itself. */
+    onset_label?: string;
+    expires_label?: string;
   };
   paddocks: PaddockRisk[];
-  recommendation: null | { name: string; message: string; deadline: string | null };
+  recommendation: null | {
+    name: string;
+    message: string;
+    deadline: string | null;
+    /** Server-formatted NZ time, e.g. "4pm". */
+    deadline_label?: string | null;
+  };
   plan: {
     summary: string;
     moves: { time: string; action: string }[];
