@@ -23,12 +23,19 @@ const BAND_LABEL: Record<Band, string> = {
 const API_DOWN =
   "Can't reach the HighGround server. Check the API is running (port 8000) and try again.";
 
-/** "2026-11-21T16:00:00+13:00" -> "4:00 pm" (falls back to the raw text if it isn't a date). */
+// Times are always shown in NZ time, whatever the laptop's clock or time zone is set to.
+const NZ_TIME = new Intl.DateTimeFormat("en-NZ", {
+  timeZone: "Pacific/Auckland",
+  hour: "numeric",
+  minute: "2-digit",
+});
+
+/** "2026-11-21T03:00:00+00:00" -> "4:00 pm" in Pacific/Auckland (raw text if not a date). */
 function clock(iso: string | null | undefined): string {
   if (!iso) return "";
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleTimeString("en-NZ", { hour: "numeric", minute: "2-digit" });
+  return NZ_TIME.format(d);
 }
 
 /** Builds the paddock popup with DOM nodes (not an HTML string) so API text can't inject markup. */
@@ -110,6 +117,7 @@ export default function App() {
   const w = result?.warning;
   const rec = result?.recommendation;
   const river = result?.river;
+  const liveDown = result?.mode === "live" && result.live_status === "unavailable";
 
   return (
     <div className="app">
@@ -121,13 +129,22 @@ export default function App() {
             <span className="banner-level">{w.level.toUpperCase()} WARNING</span>
             <span className="banner-headline">{w.headline}</span>
           </div>
+          {/* Main text is the server's own message, e.g. "Move the herd to <paddock> by 4pm". */}
           {rec && <div className="move">{rec.message}</div>}
           {rec?.deadline && (
             <div className="deadline">
-              Deadline <strong>{clock(rec.deadline)}</strong>
+              Deadline <strong>{clock(rec.deadline)}</strong> NZ time
               {w.onset && <> · warning starts {clock(w.onset)}</>}
             </div>
           )}
+        </header>
+      ) : liveDown ? (
+        // Never show "all clear" when we simply couldn't check.
+        <header className="banner banner-unavailable" role="alert">
+          <div className="banner-top">
+            <span className="banner-level">LIVE WARNINGS UNAVAILABLE</span>
+          </div>
+          <div className="move move-calm">Couldn't reach MetService. Check metservice.com</div>
         </header>
       ) : (
         <header className="banner banner-calm">
@@ -135,7 +152,7 @@ export default function App() {
             <span className="banner-level">
               {loading && !result
                 ? "Loading…"
-                : mode === "live"
+                : result?.mode === "live"
                   ? "No active warnings for this farm"
                   : "No warning – all clear"}
             </span>

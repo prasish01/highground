@@ -21,6 +21,7 @@ body { margin: 0; background: #eef0ec; }
 .banner-orange { background: var(--orange); }
 .banner-yellow, .banner-none { background: var(--yellow); }
 .banner-calm { background: var(--calm); }
+.banner-unavailable { background: #e0a526; color: #111; }
 .banner-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: 1rem; }
 .banner-level { font-weight: 800; letter-spacing: 0.04em; }
 .banner-headline { opacity: 0.95; }
