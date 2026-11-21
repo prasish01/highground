@@ -46,7 +46,11 @@ async function safetyVisible(page) {
 }
 
 async function shot(page, vp, name) {
-  if (SHOTS) await page.screenshot({ path: `${SHOTS}/${vp}-${name}.png`, fullPage: true });
+  if (!SHOTS) return;
+  await page.screenshot({ path: `${SHOTS}/${vp}-${name}.png`, fullPage: true });
+  // A full-page screenshot briefly resizes the viewport, and the app re-fits the map on resize.
+  // Let that animation finish so the next click doesn't land on a moving map.
+  await page.waitForTimeout(800);
 }
 
 async function run(browser, vp) {
@@ -83,7 +87,12 @@ async function run(browser, vp) {
   check(v, "safety line visible (replay)", await safetyVisible(page));
 
   // Colours come from the SVG fill of each paddock shape.
-  await page.waitForTimeout(300); // GeoJSON layer re-mounts with new colours
+  // The GeoJSON layer re-mounts with new colours: wait until at least one paddock is red,
+  // then a moment more so we never read or click the old layer while it's being swapped.
+  await page
+    .waitForFunction((red) => !!document.querySelector(`path.leaflet-interactive[fill="${red}"]`), RED, { timeout: 10000 })
+    .catch(() => {});
+  await page.waitForTimeout(500);
   // Paddocks are polygons; skip the river (no fill) and the shed (a circle: its path uses arcs).
   const fills = await page.$$eval("path.leaflet-interactive", (els) =>
     els
@@ -120,9 +129,13 @@ async function run(browser, vp) {
   // 3. Tap a red paddock: popup shows its reason
   const redPath = page.locator(`path.leaflet-interactive[fill="${RED}"]`).first();
   let popupText = "";
-  if ((await redPath.count()) > 0) {
+  // Up to 3 tries: a click during a layer re-mount can land on a shape that is being removed.
+  // A FAIL here after 3 tries is a real bug, not timing.
+  for (let attempt = 1; attempt <= 3 && !/m (above|below|from) river/.test(popupText); attempt++) {
+    if ((await redPath.count()) === 0) break;
     await redPath.click({ force: true }).catch(() => {});
-    popupText = (await page.locator(".leaflet-popup-content").first().textContent({ timeout: 3000 }).catch(() => "")) || "";
+    popupText = (await page.locator(".leaflet-popup-content").first().textContent({ timeout: 2000 }).catch(() => "")) || "";
+    if (attempt > 1) console.log(`      (popup needed click attempt ${attempt})`);
   }
   check(v, "paddock popup shows reason", /m (above|below|from) river/.test(popupText), JSON.stringify(popupText.slice(0, 120)));
   await shot(page, v, "3-popup");
