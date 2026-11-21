@@ -139,15 +139,54 @@ class FakeRiver:
     rising = True
 
 
-def test_river_status_is_reported_and_used_when_param_not_given(client, monkeypatch):
+def test_river_status_is_reported_and_used_in_live_mode(client, monkeypatch):
+    monkeypatch.setattr(main, "fetch_live_warnings", lambda: [])
     monkeypatch.setattr(main, "get_river_status", lambda timeout_s=5.0: FakeRiver())
-    body = client.get("/api/assess", params={"mode": "replay"}).json()
+    body = client.get("/api/assess", params={"mode": "live"}).json()
     assert body["river"] == {
         "site": "Ngaruroro River at Fernhill",
         "level_m": 2.4,
         "observed_at": "2026-11-21T09:00:00+13:00",
         "rising": True,
     }
+    assert body["river_rising"] is True
+    assert all("river rising" in p["reason"] for p in body["paddocks"])
+
+
+def bands(body):
+    return {p["paddock_id"]: (p["band"], p["score"]) for p in body["paddocks"]}
+
+
+def test_replay_ignores_a_rising_live_gauge(client, monkeypatch):
+    # Issue #9: the rehearsed replay must look the same whatever the real river is doing.
+    steady = client.get("/api/assess", params={"mode": "replay"}).json()
+    monkeypatch.setattr(main, "_river_cache", {"at": None, "status": None})
+    monkeypatch.setattr(main, "get_river_status", lambda timeout_s=5.0: FakeRiver())
+    body = client.get("/api/assess", params={"mode": "replay"}).json()
+    assert bands(body) == bands(steady)
+    assert body["recommendation"]["message"] == steady["recommendation"]["message"]
+    assert body["river_rising"] is False
+    assert body["river"]["rising"] is True  # still shown for display
+    assert not any("river rising" in p["reason"] for p in body["paddocks"])
+
+
+def test_calm_ignores_a_rising_live_gauge(client, monkeypatch):
+    monkeypatch.setattr(main, "get_river_status", lambda timeout_s=5.0: FakeRiver())
+    body = client.get("/api/assess", params={"mode": "calm"}).json()
+    assert body["river_rising"] is False
+
+
+def test_live_mode_uses_the_real_gauge(client, monkeypatch):
+    monkeypatch.setattr(main, "fetch_live_warnings", lambda: [])
+    monkeypatch.setattr(main, "get_river_status", lambda timeout_s=5.0: FakeRiver())
+    body = client.get("/api/assess", params={"mode": "live"}).json()
+    assert body["river_rising"] is True
+    assert all("river rising" in p["reason"] for p in body["paddocks"])
+
+
+def test_replay_explicit_river_rising_true_still_works(client, monkeypatch):
+    monkeypatch.setattr(main, "get_river_status", None)
+    body = client.get("/api/assess", params={"mode": "replay", "river_rising": "true"}).json()
     assert body["river_rising"] is True
     assert all("river rising" in p["reason"] for p in body["paddocks"])
 
