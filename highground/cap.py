@@ -6,6 +6,7 @@ Replay: data/replay_warning.xml, with its times shifted so onset is a few hours 
 
 from __future__ import annotations
 
+import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -47,15 +48,35 @@ def _parse_polygon(text: str) -> list[Point]:
     return pts
 
 
+COLOUR_RE = re.compile(r"\b(red|orange|yellow)\b")
+
+
+def _colour_in(text: str) -> str | None:
+    """Most severe colour named as a whole word ("hundred" is not "red")."""
+    found = set(COLOUR_RE.findall(text.lower()))
+    return next((lvl for lvl in ("red", "orange", "yellow") if lvl in found), None)
+
+
 def _level(info: ET.Element) -> str:
-    """Map CAP fields to a colour level. MetService puts colour in parameters/event text."""
+    """Map CAP fields to a colour level.
+
+    1. A colour parameter (MetService uses valueName "ColourCode").
+    2. A colour word in the event, headline or other parameter values.
+    3. CAP severity: Extreme -> red, Severe -> orange, otherwise yellow.
+    """
+    params = info.findall("cap:parameter", NS)
+    for p in params:
+        if "colour" in _text(p, "cap:valueName").lower():
+            level = _colour_in(_text(p, "cap:value"))
+            if level:
+                return level
     blob = " ".join(
         [_text(info, "cap:event"), _text(info, "cap:headline")]
-        + [_text(p, "cap:value") for p in info.findall("cap:parameter", NS)]
-    ).lower()
-    for level in ("red", "orange", "yellow"):
-        if level in blob:
-            return level
+        + [_text(p, "cap:value") for p in params]
+    )
+    level = _colour_in(blob)
+    if level:
+        return level
     severity = _text(info, "cap:severity").lower()
     return {"extreme": "red", "severe": "orange", "moderate": "yellow"}.get(severity, "yellow")
 
@@ -76,7 +97,9 @@ def parse_cap(xml_text: str) -> Warning:
         event=_text(info, "cap:event"),
         headline=_text(info, "cap:headline"),
         level=_level(info),
-        onset=datetime.fromisoformat(_text(info, "cap:onset")),
+        onset=datetime.fromisoformat(
+            _text(info, "cap:onset") or _text(info, "cap:effective") or _text(root, "cap:sent")
+        ),
         expires=datetime.fromisoformat(_text(info, "cap:expires")),
         areas=areas,
         instruction=_text(info, "cap:instruction"),
@@ -98,3 +121,10 @@ def as_replay(warning: Warning, now: datetime, onset_in: timedelta = timedelta(h
         instruction=warning.instruction,
         is_replay=True,
     )
+
+
+def parse_rss_links(rss_text: str) -> list[str]:
+    """Links to CAP XML files from the MetService RSS feed (empty when no warnings)."""
+    root = ET.fromstring(rss_text)
+    links = [(item.findtext("link") or "").strip() for item in root.iter("item")]
+    return [link for link in links if link]

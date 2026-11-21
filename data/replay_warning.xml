@@ -4,6 +4,8 @@
   Before the demo, replace this file with a real saved CAP file from
   https://alerts.metservice.com/cap/rss (keep the source and issue date in docs/data-sources.md).
   The app shifts onset/expiry so the warning always starts a few hours from "now".
+  Checked 2026-11-21: the MetService feed had no active warnings, so this sample stays.
+  Its polygon covers the sample farm (tests/test_cap_real.py checks every paddock corner).
 -->
 <alert xmlns="urn:oasis:names:tc:emergency:cap:1.2">
   <identifier>sample-replay-0001</identifier>

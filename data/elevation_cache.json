@@ -1,0 +1,15 @@
+{
+  "source": "Open Topo Data nzdem8m (LINZ, CC BY 4.0), paddock centroids",
+  "fetched_at": "2026-11-21T00:48:10+00:00",
+  "elevations": {
+    "p1": 37.5,
+    "p2": 39.5,
+    "p3": 40.0,
+    "p4": 38.9,
+    "p5": 40.0,
+    "p6": 39.9,
+    "p7": 68.5,
+    "p8": 40.1,
+    "p9": 40.1
+  }
+}
