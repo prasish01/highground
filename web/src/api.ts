@@ -35,6 +35,7 @@ export interface Assessment {
   };
   paddocks: PaddockRisk[];
   recommendation: null | {
+    paddock_id?: string;
     name: string;
     message: string;
     deadline: string | null;
