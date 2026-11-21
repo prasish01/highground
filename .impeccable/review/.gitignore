@@ -1,0 +1,3 @@
+# Review screenshots are regenerated each design pass; keep them out of git.
+*
+!.gitignore

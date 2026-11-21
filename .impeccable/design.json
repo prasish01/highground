@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-21T00:00:00Z",
+  "title": "Design System: HighGround",
+  "extensions": {
+    "colorMeta": {
+      "ink": { "role": "primary", "displayName": "Woolpack Ink", "tonalRamp": ["#0c1130", "#141b40", "#1c2450", "#2c3566", "#414a74", "#6a7299", "#a4aac4", "#dde0ec"] },
+      "stamp-red": { "role": "secondary", "displayName": "Stamp Red", "tonalRamp": ["#4d0f0b", "#7a1813", "#b3261e", "#cc3e35", "#e0645a", "#ec9089", "#f5bdb8", "#fbe6e4"] },
+      "stamp-amber": { "role": "secondary", "displayName": "Stamp Ochre", "tonalRamp": ["#3d2600", "#663f00", "#8f5a00", "#c98a12", "#f0bf55", "#f5d38a", "#f9e5bb", "#fdf4e3"] },
+      "stamp-green": { "role": "secondary", "displayName": "Field Green", "tonalRamp": ["#11301a", "#1d4a29", "#2c6b3c", "#4b8c58", "#8fc27a", "#b3d8a3", "#d5eacb", "#eef7ea"] },
+      "river-ink": { "role": "tertiary", "displayName": "River", "tonalRamp": ["#0f2a4d", "#1b4273", "#2a5c9a", "#4a7fbf", "#7fb3e0", "#a6cbeb", "#cde2f4", "#ecf4fb"] },
+      "paper": { "role": "neutral", "displayName": "Paper Green", "tonalRamp": ["#5d6650", "#838d73", "#aab597", "#c3cdb0", "#d6dfc4", "#e7edd9", "#f6f8ef", "#fcfdf8"] }
+    },
+    "typographyMeta": {
+      "move": { "displayName": "Move", "purpose": "The one instruction per screen." },
+      "heading": { "displayName": "Heading", "purpose": "Side-sheet sections." },
+      "body": { "displayName": "Body", "purpose": "All reading text; Atkinson Hyperlegible for distance legibility." },
+      "stamp": { "displayName": "Stamp", "purpose": "Stamped words, chips and the REPLAY tag only." }
+    },
+    "shadows": [
+      { "name": "sheet", "value": "0 10px 30px -14px rgba(28, 36, 80, 0.35), 0 2px 6px -2px rgba(28, 36, 80, 0.18)", "purpose": "Map card, side sheet, paddock card, About dialog." }
+    ],
+    "motion": [
+      { "name": "ease-out", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "All transitions." },
+      { "name": "stamp-press", "value": "420ms ease-out, 85ms stagger by distance from river", "purpose": "The signature move: stamps pressing onto paddocks when a warning applies." }
+    ],
+    "breakpoints": [
+      { "name": "phone", "value": "820px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Replay warning: the one stamp-red action.",
+      "html": "<button class=\"ds-btn-primary\">Replay warning</button>",
+      "css": ".ds-btn-primary { font: 700 1.08rem/1 'Atkinson Hyperlegible', system-ui, sans-serif; min-height: 46px; padding: 0 22px; border-radius: 999px; border: 2px solid #b3261e; background: #b3261e; color: #fff; cursor: pointer; transition: background 160ms cubic-bezier(0.16,1,0.3,1); } .ds-btn-primary:hover { background: #911d17; border-color: #911d17; } .ds-btn-primary:focus-visible { outline: 3px solid #f0bf55; outline-offset: 3px; }"
+    },
+    {
+      "name": "Header Button",
+      "kind": "button",
+      "refersTo": "button-on-ink",
+      "description": "Mode buttons on the indigo header; filled paper when pressed.",
+      "html": "<div style=\"background:#1c2450;padding:12px\"><button class=\"ds-btn-ink\">Live mode</button> <button class=\"ds-btn-ink\" aria-pressed=\"true\">Reset</button></div>",
+      "css": ".ds-btn-ink { font: 700 1rem/1 'Atkinson Hyperlegible', system-ui, sans-serif; min-height: 46px; padding: 0 18px; border-radius: 999px; border: 2px solid rgba(246,248,239,0.55); background: transparent; color: #f6f8ef; cursor: pointer; } .ds-btn-ink:hover { background: rgba(246,248,239,0.12); border-color: #f6f8ef; } .ds-btn-ink[aria-pressed=\"true\"] { background: #f6f8ef; color: #1c2450; } .ds-btn-ink:focus-visible { outline: 3px solid #f0bf55; outline-offset: 3px; }"
+    },
+    {
+      "name": "Stamp Chip",
+      "kind": "chip",
+      "refersTo": "chip-red",
+      "description": "Risk band as a stamped word.",
+      "html": "<span class=\"ds-chip ds-red\">MOVE OUT</span> <span class=\"ds-chip ds-amber\">WATCH</span> <span class=\"ds-chip ds-green\">SAFE</span>",
+      "css": ".ds-chip { display: inline-block; font: 400 0.85rem/1 'Saira Stencil One', sans-serif; letter-spacing: 0.1em; padding: 5px 8px 4px; border: 2px solid currentColor; border-radius: 5px; background: #f6f8ef; } .ds-red { color: #b3261e; transform: rotate(-1.5deg); } .ds-amber { color: #8f5a00; transform: rotate(1deg); } .ds-green { color: #2c6b3c; }"
+    },
+    {
+      "name": "Replay Stamp",
+      "kind": "custom",
+      "description": "Rubber-stamped REPLAY tag on anything from the replay warning.",
+      "html": "<div style=\"background:#ab2a22;padding:16px;color:#fff\"><span class=\"ds-replay\">REPLAY</span></div>",
+      "css": ".ds-replay { display: inline-block; font: 400 1.15rem/1 'Saira Stencil One', sans-serif; letter-spacing: 0.14em; padding: 6px 12px 5px; border: 3px solid currentColor; outline: 1.5px solid currentColor; outline-offset: 2px; border-radius: 6px; transform: rotate(-3deg); background: rgba(255,255,255,0.12); }"
+    },
+    {
+      "name": "Sheet",
+      "kind": "card",
+      "refersTo": "sheet",
+      "description": "Paper sheet for the map card and side panel.",
+      "html": "<section class=\"ds-sheet\"><h2>River gauge</h2><p>1.87 m, steady</p></section>",
+      "css": ".ds-sheet { background: #f6f8ef; border-radius: 18px; padding: 18px 22px; color: #1c2450; box-shadow: 0 10px 30px -14px rgba(28,36,80,0.35), 0 2px 6px -2px rgba(28,36,80,0.18); font-family: 'Atkinson Hyperlegible', system-ui, sans-serif; } .ds-sheet h2 { margin: 0 0 8px; font: 800 1.45rem 'Bricolage Grotesque', sans-serif; letter-spacing: -0.02em; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The warning, stamped on the farm map",
+    "overview": "HighGround is drawn, not plotted. The farm is a watercolour-and-pencil map, like the one pinned on the woolshed wall, and a weather warning is pressed onto it with ink stamps: MOVE OUT, WATCH, SAFE. The ground is pale paper-green, the frame is woolpack-ink indigo, and one instruction is the loudest thing on screen.",
+    "keyCharacteristics": [
+      "A hand-drawn SVG farm map generated from the API's GeoJSON: no map tiles, works offline, always fits the farm.",
+      "Risk shown three ways: watercolour wash colour, a stamped word, and a reason in words.",
+      "The warning banner carries the move instruction at display size, in the warning level's colour.",
+      "Paper grain on every surface; ink indigo for frame and text."
+    ],
+    "rules": [
+      { "name": "The Traffic Light Rule", "body": "Red, amber and green mean only risk (move stock out / could flood / low risk). No decoration, chart or brand use may borrow them.", "section": "colors" },
+      { "name": "The Ink-on-Paper Rule", "body": "Stamp ink sits on paper (a 90% paper patch inside the stamp frame), never directly on a wash, so the word always clears 3:1.", "section": "colors" },
+      { "name": "The Stencil-Only-Stamps Rule", "body": "The stencil face is for stamped words. Never headings, never body.", "section": "typography" }
+    ],
+    "dos": [
+      "Do draw every map mark from API data (paddock shapes, heights, troughs, shed, river); label anything synthetic.",
+      "Do keep the safety line verbatim and visible in the first screen on every viewport.",
+      "Do stamp REPLAY on anything from the replay warning.",
+      "Do show times only from the server's NZ-time labels."
+    ],
+    "donts": [
+      "Don't use red, amber or green for anything but risk.",
+      "Don't put stamp ink straight onto a wash.",
+      "Don't use the stencil face outside stamps.",
+      "Don't add map ornament (trees, gates, stock) that the data doesn't support.",
+      "Don't reintroduce map tiles: the demo must work offline."
+    ]
+  }
+}
