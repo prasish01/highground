@@ -6,7 +6,8 @@ Deliberately simple and explainable — every score comes with a one-line reason
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from .cap import Warning
 from .geo import Point, area_ha, centroid, distance_to_line_m
@@ -19,6 +20,16 @@ DISTANCE_WEIGHT = 0.4
 LEVEL_MULTIPLIER = {"none": 0.3, "yellow": 0.5, "orange": 0.8, "red": 1.0}
 RIVER_RISING_BONUS = 0.1
 MOVE_BUFFER = timedelta(hours=3)
+
+# Every time a farmer sees is New Zealand time, whatever the server's own time zone is.
+NZ_TZ = ZoneInfo("Pacific/Auckland")
+
+
+def to_nz(t: datetime) -> datetime:
+    """Convert to New Zealand time. A time with no zone is assumed to be NZ time already."""
+    if t.tzinfo is None:
+        return t.replace(tzinfo=NZ_TZ)
+    return t.astimezone(NZ_TZ)
 
 
 @dataclass
@@ -103,10 +114,12 @@ class Recommendation:
     name: str
     deadline: datetime | None
     message: str
+    deadline_label: str | None = None  # e.g. "4pm", NZ time
 
 
 def format_time(t: datetime) -> str:
-    """'4pm', '10:30am' style."""
+    """'4pm', '10:30am' style, in NZ time."""
+    t = to_nz(t)
     hour = t.hour % 12 or 12
     suffix = "am" if t.hour < 12 else "pm"
     return f"{hour}{suffix}" if t.minute == 0 else f"{hour}:{t.minute:02d}{suffix}"
@@ -119,7 +132,10 @@ def recommend(
     ha_per_cow: float,
     warning: Warning | None,
 ) -> Recommendation | None:
-    """Safest paddock with water and enough room. Deadline = onset minus buffer, on the hour."""
+    """Safest paddock with water and enough room.
+
+    Deadline = onset minus buffer, rounded down to the hour, in NZ time.
+    """
     by_id = {p.id: p for p in paddocks}
     needed_ha = herd_size * ha_per_cow
     candidates = [
@@ -132,9 +148,13 @@ def recommend(
     best = min(candidates, key=lambda r: (r.score, -r.height_above_river_m))
 
     deadline = None
+    label = None
     if warning is not None and warning.level in ("orange", "red"):
-        deadline = (warning.onset - MOVE_BUFFER).replace(minute=0, second=0, microsecond=0)
-        message = f"Move the herd to {best.name} by {format_time(deadline)}"
+        # Subtract in UTC so a daylight-saving change can't shift the buffer, then show in NZ.
+        latest = to_nz(warning.onset).astimezone(UTC) - MOVE_BUFFER
+        deadline = to_nz(latest).replace(minute=0, second=0, microsecond=0)
+        label = format_time(deadline)
+        message = f"Move the herd to {best.name} by {label}"
     else:
         message = f"Safest paddock if conditions worsen: {best.name}"
-    return Recommendation(best.paddock_id, best.name, deadline, message)
+    return Recommendation(best.paddock_id, best.name, deadline, message, label)

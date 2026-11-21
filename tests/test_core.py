@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 
 import pytest
 
@@ -6,7 +6,7 @@ from highground.cap import as_replay, parse_cap
 from highground.farm import DATA_DIR, load_farm
 from highground.geo import area_ha, distance_to_line_m, haversine_m, point_in_polygon
 from highground.plan import facts, template_plan
-from highground.risk import band, format_time, recommend, score_paddock
+from highground.risk import NZ_TZ, band, format_time, recommend, score_paddock, to_nz
 
 NZDT = timezone(timedelta(hours=13))
 
@@ -116,6 +116,32 @@ def test_paddock_without_water_is_never_recommended(farm, warning):
 def test_no_recommendation_when_herd_does_not_fit(farm, warning):
     risks = [score_paddock(p, farm.river, farm.river_elevation_m, warning) for p in farm.paddocks]
     assert recommend(farm.paddocks, risks, 10_000, 0.02, warning) is None
+
+
+def test_deadline_is_nz_time_when_now_is_utc(farm, warning):
+    # 00:00 UTC on 21 Nov = 1pm NZDT. Onset 7 h later = 8pm NZDT; deadline 3 h before = 5pm.
+    now_utc = datetime(2026, 11, 21, 0, 0, tzinfo=UTC)
+    replay = as_replay(warning, now_utc)
+    risks = [score_paddock(p, farm.river, farm.river_elevation_m, replay) for p in farm.paddocks]
+    rec = recommend(farm.paddocks, risks, farm.herd_size, farm.ha_per_cow, replay)
+    assert rec.message.endswith(" by 5pm")
+    assert rec.deadline_label == "5pm"
+    assert rec.deadline == datetime(2026, 11, 21, 17, 0, tzinfo=NZ_TZ)
+    assert rec.deadline.utcoffset() == timedelta(hours=13)
+    assert facts(farm.name, farm.herd_size, replay, risks, rec)["warning"]["onset"] == "8pm"
+
+
+def test_deadline_uses_nz_winter_time(farm, warning):
+    # NZST is UTC+12 in July. 00:00 UTC = noon; onset 7pm; deadline 4pm.
+    replay = as_replay(warning, datetime(2026, 7, 1, 0, 0, tzinfo=UTC))
+    risks = [score_paddock(p, farm.river, farm.river_elevation_m, replay) for p in farm.paddocks]
+    rec = recommend(farm.paddocks, risks, farm.herd_size, farm.ha_per_cow, replay)
+    assert rec.deadline_label == "4pm"
+
+
+def test_to_nz_converts_other_zones_and_assumes_nz_for_naive_times():
+    assert to_nz(datetime(2026, 11, 21, 3, 0, tzinfo=UTC)).hour == 16
+    assert to_nz(datetime(2026, 11, 21, 3, 0)).tzinfo == NZ_TZ
 
 
 def test_format_time():
