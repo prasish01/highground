@@ -6,15 +6,15 @@ Owner: Teammate 5 (QA). Every bug found in integration runs. P1 and P2 bugs each
 
 **Owners:** T1 UI (`App.tsx`, `styles.css`, `api.ts`, `components/FarmMap.tsx`) · T2 Data (`data/`, `cap.py`, `elevation.py`, `river.py`) · T3 Logic (`risk.py`, `plan.py`, `main.py`, `farm.py`) · T4 Story (`About.tsx`, `SharePlan.tsx`, pitch, README) · Prasish (repo settings)
 
-Last updated: 2026-11-21 15:50 NZDT
+Last updated: 2026-11-21 16:20 NZDT
 
 ## Open
 
 | ID | Sev | Area | Owner | Steps to reproduce | Status |
 |---|---|---|---|---|---|
 | BUG-013 | P3 | Docs | T4 | README says "16 tests" (main now 143) and "Four Claude teammates" (five). | Open |
-| BUG-014 | P3 | Precision | T1 | The paddock card shows "risk 77/100", suggesting false precision. | Open |
-| BUG-017 | P3 | Mobile | T1 | At 375×812: Replay → the red (MOVE OUT) row starts below the fold, because the banner + safety line come first. The projector view is fine. | Open |
+| BUG-014 | P3 | Precision | T1 | The paddock card shows "risk 77/100", suggesting false precision. | **Fixed in #20** (verified: card shows band word + reason) |
+| BUG-017 | P3 | Mobile | T1 | At 375×812: Replay → the red (MOVE OUT) row starts below the fold, because the banner + safety line come first. The projector view is fine. | **Fixed in #20** (verified: MOVE OUT row at 693 px of 812) |
 | BUG-018 | P3 | Process | T3 | #17 edited `tests/test_demo_path.py` (QA file). The change was correct (accepts "at river level"). | Noted; please ask QA next time |
 
 ## Resolved

@@ -1,12 +1,13 @@
 # QA status
 
-**2026-11-21 15:50 NZDT** · Teammate 5 (QA + Direction) · overwritten each check-in
+**2026-11-21 16:20 NZDT** · Teammate 5 (QA + Direction) · overwritten each check-in
 
 ## Overall: 🟢 Green
 
 - **main 🟢 with #19 merged** (hand-drawn map; rollback tag `pre-redesign` exists). 143 tests pass; demo path **42/42** at 1366px and 375px (run twice), including QA's independent checks (bands match the API, washes really red/green).
 - **Fully offline on main:** with the page loaded and Replay pressed, **zero requests leave localhost**. This is the wifi-off rehearsal check, done in the browser.
-- **No open feature PRs.** #16 (this QA PR) is updated with main; the e2e conflict is resolved (kept QA's dual-map test). **Ready to merge.**
+- **#20 (Leaflet removed, Presentation mode, BUG-014/017 fixes): ✅ ready.** With #20 + #16 on main: 143 tests, demo path **42/42 ×2** normal and **42/42** in Presentation mode, their `presentation.cjs` 18/18, zero external requests.
+- **#16 (this QA PR):** up to date with main; merges cleanly with #20. **Ready to merge.** #20 and #16 can go in either order.
 - **UI freeze from now:** fixes only. Re-run `node web/e2e/demo-path.cjs` after every merge.
 
 ## Demo path, step by step (main, with #19)
@@ -34,6 +35,7 @@ On main today (Leaflet map) the same path is 38/38, with tiles needing wifi.
 | main before #19 | — | ✅ | 143 passed | 38/38 ×2 (Leaflet) |
 | **main now (with #19)** | — | ✅ | **143 passed** | **42/42 ×2** (drawn; incl. 4 QA independent checks) |
 | main + #16 (this PR) | clean (conflict resolved here) | ✅ | 143 passed | 42/42 (same test) |
+| main + #20 + #16 | clean | ✅ | 143 passed | **42/42 ×2** normal, **42/42** `?present=1`, presentation.cjs 18/18 |
 
 `npm run build` ✅ on both (bundle 305 kB → 164 kB JS with #19, as Leaflet is no longer used).
 
@@ -48,7 +50,8 @@ On main today (Leaflet map) the same path is 38/38, with tiles needing wifi.
 
 | Order | PR | Owner | Verdict |
 |---|---|---|---|
-| 1 | #16 QA status (this PR) | T5 | ✅ ready: QA files only, up to date with main |
+| 1 | #20 UI follow-ups: remove Leaflet, Presentation mode, BUG-014/017 | T1 | ✅ ready (either order with #16) |
+| 2 | #16 QA status (this PR) | T5 | ✅ ready: QA files only, up to date with main |
 
 ## Top 3 risks
 
@@ -76,8 +79,8 @@ Full list: [`docs/bugs.md`](bugs.md).
 
 ## Next actions
 
-- **Prasish:** merge #16; book the farmer chat; tell the team UI is frozen; record the backup demo video from main now.
-- **Teammate 1 (UI):** after #19: remove the unused Leaflet deps (follow-up); BUG-017 (reds below the fold on phones); BUG-014 ("risk 77/100").
+- **Prasish:** merge #20 and #16; **then freeze UI**; record the backup demo video in Presentation mode (`/?present=1`); book the farmer chat.
+- **Teammate 1 (UI):** all QA notes done in #20 🎉. After it merges: fixes only.
 - **Teammate 2 (Data):** nothing blocking. 🎉
 - **Teammate 3 (Logic):** nothing blocking. Please leave QA files to QA (or ping first).
 - **Teammate 4 (Story):** match About/SharePlan to #19's shared styles (requested in #19); README test count (BUG-013); add the screenshot now the farm is final.
