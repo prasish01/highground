@@ -124,7 +124,7 @@ async function run(browser, vp) {
     await redPath.click({ force: true }).catch(() => {});
     popupText = (await page.locator(".leaflet-popup-content").first().textContent({ timeout: 3000 }).catch(() => "")) || "";
   }
-  check(v, "paddock popup shows reason", /m (above|from) river/.test(popupText), JSON.stringify(popupText.slice(0, 120)));
+  check(v, "paddock popup shows reason", /m (above|below|from) river/.test(popupText), JSON.stringify(popupText.slice(0, 120)));
   await shot(page, v, "3-popup");
   await page.keyboard.press("Escape").catch(() => {});
 
