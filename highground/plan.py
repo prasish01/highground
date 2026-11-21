@@ -52,6 +52,7 @@ def facts(
         else {
             "event": warning.event,
             "level": warning.level,
+            # format_time always gives NZ time, whatever zone the server runs in.
             "onset": format_time(warning.onset),
             "expires": format_time(warning.expires),
             "replay": warning.is_replay,
