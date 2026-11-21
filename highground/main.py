@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import logging
+import math
 import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from dataclasses import asdict
-from datetime import UTC, datetime
+from datetime import datetime
 from typing import Any, Literal
 
 import httpx
@@ -17,7 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .cap import Warning, as_replay, parse_cap
 from .farm import DATA_DIR, Farm, load_farm
 from .plan import facts, make_plan
-from .risk import recommend, score_paddock
+from .risk import NZ_TZ, format_time, recommend, score_paddock, to_nz
 
 # Optional data sources from the Data teammate. If they are not merged yet, or fail,
 # we fall back to the GeoJSON elevations and "river not rising".
@@ -45,27 +46,53 @@ REPLAY = parse_cap((DATA_DIR / "replay_warning.xml").read_text(encoding="utf-8")
 
 
 def apply_elevation_cache(farm: Farm) -> int:
-    """Replace placeholder paddock elevations with cached live values. Returns how many."""
+    """Replace placeholder paddock elevations with cached live values. Returns how many.
+
+    Never raises: a missing or broken cache, wrong ids or bad values are logged and the
+    GeoJSON elevations are kept for any paddock without a good value.
+    """
     if load_or_refresh_cache is None:
+        log.info("Elevation module not available, using GeoJSON elevations")
         return 0
     try:
         cache = load_or_refresh_cache(farm.paddocks)
     except Exception as exc:  # network or file problem: keep the GeoJSON values
         log.warning("Elevation cache unavailable, using GeoJSON values: %s", exc)
         return 0
+    if not isinstance(cache, dict):
+        log.warning("Elevation cache is not a mapping (%s), ignoring it", type(cache).__name__)
+        return 0
+
+    ids = {p.id for p in farm.paddocks}
+    unknown = sorted(str(k) for k in cache if k not in ids)
+    if unknown:
+        log.warning("Elevation cache has ids not on this farm, ignoring: %s", unknown)
     updated = 0
     for p in farm.paddocks:
-        value = cache.get(p.id) if cache else None
-        if isinstance(value, int | float):
-            p.elevation_m = float(value)
-            updated += 1
+        value = cache.get(p.id)
+        if (
+            isinstance(value, bool)
+            or not isinstance(value, int | float)
+            or not math.isfinite(value)
+        ):
+            if p.id in cache:
+                log.warning("Bad elevation for %s (%r), keeping %s m", p.id, value, p.elevation_m)
+            continue
+        p.elevation_m = float(value)
+        updated += 1
+    missing = len(ids) - updated
+    if missing:
+        log.warning("%d paddock(s) kept their GeoJSON elevation", missing)
     return updated
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    n = apply_elevation_cache(FARM)
-    log.info("Applied %d live paddock elevations", n)
+    try:
+        n = apply_elevation_cache(FARM)
+        log.info("Applied %d live paddock elevations", n)
+    except Exception:  # belt and braces: startup must never fail on elevation
+        log.exception("Elevation update failed, using GeoJSON values")
     yield
 
 
@@ -79,7 +106,8 @@ app.add_middleware(
 
 
 def now_nz() -> datetime:
-    return datetime.now(UTC).astimezone()
+    """Current time in New Zealand, whatever time zone this server is set to."""
+    return datetime.now(NZ_TZ)
 
 
 # --- live MetService warnings (cached 10 minutes) ------------------------------
@@ -190,8 +218,10 @@ def assess(
         if warning is None
         else {
             **{k: v for k, v in asdict(warning).items() if k not in ("areas", "onset", "expires")},
-            "onset": warning.onset.isoformat(),
-            "expires": warning.expires.isoformat(),
+            "onset": to_nz(warning.onset).isoformat(),
+            "expires": to_nz(warning.expires).isoformat(),
+            "onset_label": format_time(warning.onset),
+            "expires_label": format_time(warning.expires),
         },
         "paddocks": [asdict(r) for r in risks],
         "recommendation": None
